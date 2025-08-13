@@ -57,12 +57,13 @@ def home(request):
         print("Error fetching resume score:", e)
 
     services = [
-        {"name": "Resume Builder", "url": "resume_home", "icon": "📄"},
-        {"name": "Job Analysis", "url": "analysis_home", "icon": "📊"},
-        {"name": "ATS Optimizer", "url": "ats_home", "icon": "⚡"},
-        {"name": "Exam Prep", "url": "exam_home", "icon": "📝"},
-        {"name": "Training", "url": "training_home", "icon": "📚"},
-    ]
+    {"name": "Resume Builder", "url": "resume_home", "icon": "📄"},
+    {"name": "Job Analysis", "url": "analysis_home", "icon": "📊"},
+    {"name": "ATS Optimizer", "url": "ats_home", "icon": "⚡"},
+    {"name": "Exam Prep", "url": "exam_home", "icon": "📝"},
+    {"name": "Training", "url": "training_home", "icon": "📚"},
+    {"name": "Mock Interview", "url": "interview_home", "icon": "🎤"},
+]
 
     return render(request, "home.html", {"services": services, "stats": stats})
 
@@ -74,7 +75,7 @@ def profile(request):
         form = UserProfileForm(request.POST, instance=profile)
         if form.is_valid():
             form.save()
-            return redirect('accounts:profile')
+            return redirect('profile')
     else:
         form = UserProfileForm(instance=profile)
     return render(request, 'accounts/profile.html', {'form': form})
