@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Interview Training</h2>
+<p>Your Resume:</p>
+<pre>{{ resume }}</pre>
+<form method="post">
+    {% csrf_token %}
+    <label>Enter Job Description:</label><br>
+    <textarea name="job_description" rows="6" required></textarea><br><br>
+    <button type="submit">Start Training</button>
+</form>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Resume Analysis</h2>
+<form method="post">
+    {% csrf_token %}
+    <textarea name="job_description" rows="6" placeholder="Paste job description here..." style="width:100%"></textarea><br><br>
+    <button type="submit">Analyze</button>
+</form>
+
+{% if ai_suggestions %}
+    <h3>Suggestions</h3>
+    <pre>{{ ai_suggestions }}</pre>
+{% endif %}
+
+{% if rewritten_resume %}
+    <h3>Rewritten Resume</h3>
+    <pre>{{ rewritten_resume }}</pre>
+{% endif %}
+{% endblock %}

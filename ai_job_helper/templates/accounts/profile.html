@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-xl font-bold mb-4">Profile</h2>
+
+<form method="post" enctype="multipart/form-data" class="space-y-4">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded">Save</button>
+</form>
+
+{% if user.userprofile.profile_picture_url %}
+    <h3 class="mt-6 font-semibold">Profile Picture Preview</h3>
+    <img src="{{ user.userprofile.profile_picture_url }}" alt="Profile Picture" style="max-width:150px;">
+{% endif %}
+
+{% if user.userprofile.resume_text %}
+    <h3 class="mt-6 font-semibold">Resume Content</h3>
+    <pre class="bg-gray-100 p-4 rounded">{{ user.userprofile.resume_text }}</pre>
+{% endif %}
+{% endblock %}

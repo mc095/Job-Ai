@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Start Mock Interview</h2>
+<form method="post">
+    {% csrf_token %}
+    <label>Job Description</label>
+    <textarea name="job_description" rows="6" class="form-control"></textarea>
+    <br>
+    <button type="submit" class="btn btn-primary">Start Interview</button>
+</form>
+{% endblock %}

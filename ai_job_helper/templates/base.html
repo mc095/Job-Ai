@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block title %}AI Job Helper{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <!-- Navbar -->
+  <nav class="bg-white shadow p-4">
+    <div class="container mx-auto flex justify-between items-center">
+      <a href="{% url 'home' %}" class="font-bold text-lg">AI Job Helper</a>
+
+      <div class="flex items-center space-x-4">
+        {% if user.is_authenticated %}
+          <div class="relative">
+            <button id="profileMenuButton" class="flex items-center space-x-2 focus:outline-none">
+              {% if user.userprofile.profile_picture_url %}
+                <img src="{{ user.userprofile.profile_picture_url }}" alt="Profile"
+                  class="w-8 h-8 rounded-full object-cover border border-gray-300" />
+              {% else %}
+                <!-- Fallback avatar -->
+                <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-white">
+                  {{ user.username|first|upper }}
+                </div>
+              {% endif %}
+              <span class="hidden sm:inline">Hi, {{ user.username }}</span>
+            </button>
+
+            <!-- Dropdown menu -->
+            <div id="profileDropdown" class="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-lg hidden z-50">
+              <a href="{% url 'profile' %}" class="block px-4 py-2 hover:bg-gray-100">Profile</a>
+              <a href="{% url 'logout' %}" class="block px-4 py-2 hover:bg-gray-100">Logout</a>
+            </div>
+          </div>
+        {% else %}
+          <a href="{% url 'login' %}" class="text-gray-700 hover:text-gray-900">Login</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="container mx-auto mt-8">
+    {% if messages %}
+      <ul class="mb-4">
+        {% for message in messages %}
+          <li class="text-sm text-green-600">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- JS to toggle dropdown -->
+  <script>
+    const btn = document.getElementById('profileMenuButton');
+    const menu = document.getElementById('profileDropdown');
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      menu.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.classList.add('hidden');
+      }
+    });
+  </script>
+
+</body>
+</html>

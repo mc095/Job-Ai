@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Mock Interview</h2>
+
+<div class="chat-box">
+    {% for m in messages %}
+        <p><strong>{{ m.role|title }}:</strong> {{ m.content }}</p>
+    {% endfor %}
+</div>
+
+{% if not session.completed %}
+<form method="post">
+    {% csrf_token %}
+    <label>Your Answer:</label>
+    <textarea name="answer" rows="4" class="form-control"></textarea>
+    <br>
+    <button type="submit" class="btn btn-success">Send Answer</button>
+</form>
+{% else %}
+<p><strong>Interview Completed.</strong></p>
+{% endif %}
+{% endblock %}

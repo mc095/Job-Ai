@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-2xl font-bold mb-4">ATS Scoring & Optimization</h2>
+
+<form method="post" class="bg-white p-4 rounded shadow space-y-4">
+  {% csrf_token %}
+  <div>
+    <label class="block font-semibold mb-1">Job Description</label>
+    {{ form.job_description }}
+  </div>
+  <div class="flex items-center space-x-2">
+    {{ form.rewrite_resume }}
+    <label>Also generate an optimized resume rewrite</label>
+  </div>
+  <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Run ATS</button>
+</form>
+
+{% if error %}
+  <p class="mt-4 text-red-600">{{ error }}</p>
+{% endif %}
+
+{% if result %}
+  <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="bg-white p-4 rounded shadow">
+      <h3 class="font-semibold mb-2">Scores</h3>
+      <p><span class="font-semibold">Baseline:</span> {{ result.baseline_score }}/100</p>
+      <p><span class="font-semibold">Final (LLM-fused):</span> {{ result.final_score }}/100</p>
+    </div>
+    <div class="bg-white p-4 rounded shadow lg:col-span-2">
+      <h3 class="font-semibold mb-2">Missing Keywords</h3>
+      <div class="prose whitespace-pre-wrap">{{ result.missing_keywords|default:"-" }}</div>
+    </div>
+  </div>
+
+  <div class="bg-white p-4 rounded shadow mt-6">
+    <h3 class="font-semibold mb-2">Suggestions</h3>
+    <pre class="whitespace-pre-wrap">{{ result.suggestions }}</pre>
+  </div>
+
+  {% if result.optimized_resume %}
+  <div class="bg-white p-4 rounded shadow mt-6">
+    <h3 class="font-semibold mb-2">Optimized Resume</h3>
+    <pre class="whitespace-pre-wrap">{{ result.optimized_resume }}</pre>
+  </div>
+  {% endif %}
+{% endif %}
+
+{% if history %}
+  <div class="bg-white p-4 rounded shadow mt-8">
+    <h3 class="font-semibold mb-3">Recent Runs</h3>
+    <ul class="list-disc ml-5 space-y-1">
+      {% for h in history %}
+        <li>{{ h.created_at|date:"Y-m-d H:i" }} — Score: {{ h.final_score }}/100</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+{% endblock %}

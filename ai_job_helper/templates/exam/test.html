@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <h2 class="text-3xl font-bold mb-6">{{ exam.job_role }} - Multiple Choice Test</h2>
+        <div class="bg-blue-100 p-4 rounded-lg mb-6">
+            <p class="text-blue-800">Answer all questions. Select the best option for each question.</p>
+        </div>
+
+        <form method="post" class="space-y-8">
+            {% csrf_token %}
+            {% for q in questions %}
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <p class="text-lg font-semibold mb-4">Q{{ forloop.counter }}. {{ q.text }}</p>
+                    <div class="space-y-2">
+                        <label class="flex items-start p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
+                            <input type="radio" name="{{ q.mongo_id }}" value="A" required 
+                                   class="mt-1 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                            <span class="ml-3">
+                                <span class="font-medium">A.</span> {{ q.option_a }}
+                            </span>
+                        </label>
+                        <label class="flex items-start p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
+                            <input type="radio" name="{{ q.mongo_id }}" value="B" required 
+                                   class="mt-1 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                            <span class="ml-3">
+                                <span class="font-medium">B.</span> {{ q.option_b }}
+                            </span>
+                        </label>
+                        <label class="flex items-start p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
+                            <input type="radio" name="{{ q.mongo_id }}" value="C" required 
+                                   class="mt-1 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                            <span class="ml-3">
+                                <span class="font-medium">C.</span> {{ q.option_c }}
+                            </span>
+                        </label>
+                        <label class="flex items-start p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
+                            <input type="radio" name="{{ q.mongo_id }}" value="D" required 
+                                   class="mt-1 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                            <span class="ml-3">
+                                <span class="font-medium">D.</span> {{ q.option_d }}
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            {% endfor %}
+
+            <div class="mt-8 text-center">
+                <button type="submit" 
+                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg 
+                               focus:outline-none focus:shadow-outline transform transition hover:scale-105">
+                    Submit Test
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

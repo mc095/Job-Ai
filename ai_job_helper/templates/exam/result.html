@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Exam Result</h2>
+<p>Job Role: {{ exam.job_role }}</p>
+<p>Your Score: {{ exam.score }} / {{ exam.questions.count }}</p>
+{% endblock %}

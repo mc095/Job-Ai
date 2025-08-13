@@ -1,0 +1,17 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+# Django migrations directory
+ai_job_helper/migrations/
+# Virtual environment
+venv
+# Media files
+media/
+# Database files
+db.sqlite3
+# Environment variables
+.env
+# Project specific files
+.DS_Store
+*.log

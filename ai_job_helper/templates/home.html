@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Welcome, {{ user.username }}</h1>
+
+<!-- User Stats Section -->
+<div style="margin-bottom: 30px; padding: 20px; border: 1px solid #ccc; border-radius: 8px;">
+    <h2>Your Performance</h2>
+    <ul>
+        <li><strong>Latest Exam Score:</strong> {{ stats.exam_score }}</li>
+        <li><strong>Latest ATS Score:</strong> {{ stats.ats_score }}</li>
+    </ul>
+</div>
+
+<!-- Services Section -->
+<div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px;">
+    {% for service in services %}
+        <a href="{% url service.url %}" style="border:1px solid #ccc; padding:20px; text-align:center; text-decoration:none; border-radius:8px;">
+            <div style="font-size:3em;">{{ service.icon }}</div>
+            <h3>{{ service.name }}</h3>
+        </a>
+    {% endfor %}
+</div>
+{% endblock %}

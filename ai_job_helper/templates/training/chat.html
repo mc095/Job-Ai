@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Training Chat - {{ session.job_description|truncatechars:50 }}</h2>
+<div style="border:1px solid #ccc; padding:10px; height:400px; overflow-y:auto;">
+    {% for msg in messages %}
+        {% if msg.role == "user" %}
+            <p><strong>You:</strong> {{ msg.content }}</p>
+        {% else %}
+            <p style="color:blue;"><strong>Bot:</strong> {{ msg.content|linebreaks }}</p>
+        {% endif %}
+    {% endfor %}
+</div>
+<form method="post" style="margin-top:10px;">
+    {% csrf_token %}
+    <input type="text" name="message" placeholder="Type your reply..." required style="width:80%;">
+    <button type="submit">Send</button>
+</form>
+{% endblock %}
