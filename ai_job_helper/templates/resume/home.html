@@ -1,80 +1,273 @@
 {% extends "base.html" %}
 {% block content %}
-<h2 class="text-2xl font-bold mb-6">Resume Builder</h2>
+<div class="min-h-screen py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header Section -->
+        <div class="text-center mb-12 animate-fade-in">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl shadow-xl mb-6">
+                <i class="fas fa-file-alt text-white text-3xl"></i>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-900 via-primary-600 to-secondary-600 bg-clip-text text-transparent mb-4">
+                Resume Builder
+            </h1>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                Choose from our collection of professional LaTeX resume templates and build your perfect resume
+            </p>
+        </div>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-  
-  <!-- Card 1 -->
-  <div class="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition">
-    <img src="https://writelatex.s3.amazonaws.com/published_ver/45943.jpeg?X-Amz-Expires=14400&X-Amz-Date=20250812T231725Z&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAWJBOALPNFPV7PVH5/20250812/us-east-1/s3/aws4_request&X-Amz-SignedHeaders=host&X-Amz-Signature=3a4d00a1700acc8cfc1e377952796610b223a4d6f3eb30ed4d03648e5a8f707b" alt="AutoCV Template" class="w-full h-40 object-cover">
-    <div class="p-4">
-      <h3 class="text-lg font-semibold mb-2">AutoCV</h3>
-      <a href="https://www.overleaf.com/latex/templates/autocv/scfvqfpxncwb" target="_blank"
-         class="block bg-blue-500 text-white text-center py-2 rounded hover:bg-blue-600">
-        Open in Overleaf
-      </a>
+        <!-- Quick Actions -->
+        <div class="mb-12">
+            <div class="bg-gradient-to-r from-primary-500 to-secondary-500 rounded-3xl p-8 text-white shadow-2xl">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold mb-4">Ready to Build Your Resume?</h2>
+                    <p class="text-xl text-white/90 max-w-2xl mx-auto">
+                        Start with our interactive resume builder or choose from professional templates
+                    </p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <a href="{% url 'resume_builder' %}" 
+                       class="bg-white/20 backdrop-blur-sm rounded-2xl p-6 text-center hover:bg-white/30 transition-all duration-200 transform hover:-translate-y-1">
+                        <i class="fas fa-edit text-4xl mb-4"></i>
+                        <h3 class="text-xl font-bold mb-2">Interactive Builder</h3>
+                        <p class="text-white/80">Build your resume step by step with our guided form</p>
+                    </a>
+                    
+                    <a href="#templates" 
+                       class="bg-white/20 backdrop-blur-sm rounded-2xl p-6 text-center hover:bg-white/30 transition-all duration-200 transform hover:-translate-y-1">
+                        <i class="fas fa-palette text-4xl mb-4"></i>
+                        <h3 class="text-xl font-bold mb-2">Browse Templates</h3>
+                        <p class="text-white/80">Choose from professional LaTeX templates below</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Templates Section -->
+        <div id="templates">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Professional Resume Templates</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Choose from our curated collection of industry-standard LaTeX resume templates</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Template 1 -->
+                <div class="group bg-white/80 backdrop-blur-md rounded-3xl shadow-xl border border-white/20 overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="relative overflow-hidden">
+                        <img src="https://writelatex.s3.amazonaws.com/published_ver/45943.jpeg?X-Amz-Expires=14400&X-Amz-Date=20250812T231725Z&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAWJBOALPNFPV7PVH5/20250812/us-east-1/s3/aws4_request&X-Amz-SignedHeaders=host&X-Amz-Signature=3a4d00a1700acc8cfc1e377952796610b223a4d6f3eb30ed4d03648e5a8f707b" 
+                             alt="AutoCV Template" 
+                             class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div class="absolute top-4 right-4">
+                            <span class="px-3 py-1 bg-primary-500 text-white text-sm font-medium rounded-full">Popular</span>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">AutoCV</h3>
+                        <p class="text-gray-600 text-sm mb-4">Modern, clean design perfect for tech professionals</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2 text-sm text-gray-500">
+                                <i class="fas fa-star text-yellow-500"></i>
+                                <span>4.8</span>
+                                <span>•</span>
+                                <span>LaTeX</span>
+                            </div>
+                            <a href="https://www.overleaf.com/latex/templates/autocv/scfvqfpxncwb" 
+                               target="_blank"
+                               class="bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-4 py-2 rounded-xl font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200">
+                                <i class="fas fa-external-link-alt mr-2"></i>
+                                Open Template
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Template 2 -->
+                <div class="group bg-white/80 backdrop-blur-md rounded-3xl shadow-xl border border-white/20 overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="relative overflow-hidden">
+                        <img src="https://writelatex.s3.amazonaws.com/published_ver/37887.jpeg?X-Amz-Expires=14400&X-Amz-Date=20250812T231759Z&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAWJBOALPNFPV7PVH5/20250812/us-east-1/s3/aws4_request&X-Amz-SignedHeaders=host&X-Amz-Signature=0ffc549bb8be45af1f3b5e8b1344d4c46a222d5a1fdcefc42425713153fd905d" 
+                             alt="NIT Patna Resume Template" 
+                             class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">NIT Patna Template</h3>
+                        <p class="text-gray-600 text-sm mb-4">Academic-focused design for students and researchers</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2 text-sm text-gray-500">
+                                <i class="fas fa-star text-yellow-500"></i>
+                                <span>4.6</span>
+                                <span>•</span>
+                                <span>Academic</span>
+                            </div>
+                            <a href="https://www.overleaf.com/latex/templates/nit-patna-resume-template-v2-dot-1/hkwrzcwrfgqj" 
+                               target="_blank"
+                               class="bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-4 py-2 rounded-xl font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200">
+                                <i class="fas fa-external-link-alt mr-2"></i>
+                                Open Template
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Template 3 -->
+                <div class="group bg-white/80 backdrop-blur-md rounded-3xl shadow-xl border border-white/20 overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="relative overflow-hidden">
+                        <img src="https://writelatex.s3.amazonaws.com/published_ver/12414.jpeg?X-Amz-Expires=14400&X-Amz-Date=20250812T231851Z&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAWJBOALPNFPV7PVH5/20250812/us-east-1/s3/aws4_request&X-Amz-SignedHeaders=host&X-Amz-Signature=0bf3b62fb40e29f9dabf809b4b8499a645c3d33db16431f46e6e937eb9f9792a" 
+                             alt="IIT Bombay Resume" 
+                             class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">IIT Bombay Resume</h3>
+                        <p class="text-gray-600 text-sm mb-4">Professional design for engineering graduates</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2 text-sm text-gray-500">
+                                <i class="fas fa-star text-yellow-500"></i>
+                                <span>4.7</span>
+                                <span>•</span>
+                                <span>Engineering</span>
+                            </div>
+                            <a href="https://www.overleaf.com/latex/templates/indian-institute-of-technology-bombay-resume/fgnpzhygqxrq" 
+                               target="_blank"
+                               class="bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-4 py-2 rounded-xl font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200">
+                                <i class="fas fa-external-link-alt mr-2"></i>
+                                Open Template
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Template 4 -->
+                <div class="group bg-white/80 backdrop-blur-md rounded-3xl shadow-xl border border-white/20 overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="relative overflow-hidden">
+                        <img src="https://writelatex.s3.amazonaws.com/published_ver/22185.jpeg?X-Amz-Expires=14400&X-Amz-Date=20250812T231921Z&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAWJBOALPNFPV7PVH5/20250812/us-east-1/s3/aws4_request&X-Amz-SignedHeaders=host&X-Amz-Signature=1adeea7853d6051db5a311358c9a6b130f992a63f929dbe948c619792202c85e" 
+                             alt="CS/IT/SWE Template" 
+                             class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">CS / IT / SWE Resume</h3>
+                        <p class="text-gray-600 text-sm mb-4">Perfect for software developers and IT professionals</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2 text-sm text-gray-500">
+                                <i class="fas fa-star text-yellow-500"></i>
+                                <span>4.9</span>
+                                <span>•</span>
+                                <span>Tech</span>
+                            </div>
+                            <a href="https://www.overleaf.com/latex/templates/cs-slash-it-slash-swe-resume-template/ncxgzcgknkmf" 
+                               target="_blank"
+                               class="bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-4 py-2 rounded-xl font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200">
+                                <i class="fas fa-external-link-alt mr-2"></i>
+                                Open Template
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Template 5 -->
+                <div class="group bg-white/80 backdrop-blur-md rounded-3xl shadow-xl border border-white/20 overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="relative overflow-hidden">
+                        <img src="https://writelatex.s3.amazonaws.com/published_ver/26352.jpeg?X-Amz-Expires=14400&X-Amz-Date=20250812T231948Z&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAWJBOALPNFPV7PVH5/20250812/us-east-1/s3/aws4_request&X-Amz-SignedHeaders=host&X-Amz-Signature=4e9657a6de9badac9ade65e6da030ca4d39951d8699344edd50092a3cc20d1d8" 
+                             alt="FAANGPath Simple Template" 
+                             class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">FAANGPath Simple</h3>
+                        <p class="text-gray-600 text-sm mb-4">Minimalist design for FAANG company applications</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2 text-sm text-gray-500">
+                                <i class="fas fa-star text-yellow-500"></i>
+                                <span>4.8</span>
+                                <span>•</span>
+                                <span>FAANG</span>
+                            </div>
+                            <a href="https://www.overleaf.com/latex/templates/faangpath-simple-template/npsfpdqnxmbc" 
+                               target="_blank"
+                               class="bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-4 py-2 rounded-xl font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200">
+                                <i class="fas fa-external-link-alt mr-2"></i>
+                                Open Template
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Template 6 -->
+                <div class="group bg-white/80 backdrop-blur-md rounded-3xl shadow-xl border border-white/20 overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="relative overflow-hidden">
+                        <img src="https://writelatex.s3.amazonaws.com/published_ver/28859.jpeg?X-Amz-Expires=14400&X-Amz-Date=20250812T232024Z&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAWJBOALPNFPV7PVH5/20250812/us-east-1/s3/aws4_request&X-Amz-SignedHeaders=host&X-Amz-Signature=a80d1214ba3dcb4294bb1cbe9ed26ba268f5e34ff071a39a4854afd1d34b71cc" 
+                             alt="Elegant Resume Template" 
+                             class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Elegant Resume</h3>
+                        <p class="text-gray-600 text-sm mb-4">Sophisticated design for executive positions</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2 text-sm text-gray-500">
+                                <i class="fas fa-star text-yellow-500"></i>
+                                <span>4.7</span>
+                                <span>•</span>
+                                <span>Executive</span>
+                            </div>
+                            <a href="https://www.overleaf.com/latex/templates/elegant-resume-template/gcnbfnxkcwby" 
+                               target="_blank"
+                               class="bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-4 py-2 rounded-xl font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200">
+                                <i class="fas fa-external-link-alt mr-2"></i>
+                                Open Template
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Section -->
+        <div class="mt-16 bg-gradient-to-r from-accent-50 to-green-50 rounded-3xl p-8 border border-accent-200">
+            <div class="text-center">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Need Help Getting Started?</h3>
+                <p class="text-gray-600 mb-6 max-w-2xl mx-auto">
+                    Our interactive resume builder guides you through each step, or you can use the LaTeX templates for more customization.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                    <a href="{% url 'resume_builder' %}" 
+                       class="inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-semibold rounded-xl hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200">
+                        <i class="fas fa-rocket mr-2"></i>
+                        Start Building
+                    </a>
+                    <a href="#" 
+                       class="inline-flex items-center justify-center px-8 py-3 bg-white border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transform hover:-translate-y-0.5 transition-all duration-200">
+                        <i class="fas fa-question-circle mr-2"></i>
+                        View Guide
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-
-  <!-- Card 2 -->
-  <div class="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition">
-    <img src="https://writelatex.s3.amazonaws.com/published_ver/37887.jpeg?X-Amz-Expires=14400&X-Amz-Date=20250812T231759Z&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAWJBOALPNFPV7PVH5/20250812/us-east-1/s3/aws4_request&X-Amz-SignedHeaders=host&X-Amz-Signature=0ffc549bb8be45af1f3b5e8b1344d4c46a222d5a1fdcefc42425713153fd905d" alt="NIT Patna Resume Template" class="w-full h-40 object-cover">
-    <div class="p-4">
-      <h3 class="text-lg font-semibold mb-2">NIT Patna Resume Template</h3>
-      <a href="https://www.overleaf.com/latex/templates/nit-patna-resume-template-v2-dot-1/hkwrzcwrfgqj" target="_blank"
-         class="block bg-blue-500 text-white text-center py-2 rounded hover:bg-blue-600">
-        Open in Overleaf
-      </a>
-    </div>
-  </div>
-
-  <!-- Card 3 -->
-  <div class="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition">
-    <img src="https://writelatex.s3.amazonaws.com/published_ver/12414.jpeg?X-Amz-Expires=14400&X-Amz-Date=20250812T231851Z&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAWJBOALPNFPV7PVH5/20250812/us-east-1/s3/aws4_request&X-Amz-SignedHeaders=host&X-Amz-Signature=0bf3b62fb40e29f9dabf809b4b8499a645c3d33db16431f46e6e937eb9f9792a" alt="IIT Bombay Resume" class="w-full h-40 object-cover">
-    <div class="p-4">
-      <h3 class="text-lg font-semibold mb-2">IIT Bombay Resume</h3>
-      <a href="https://www.overleaf.com/latex/templates/indian-institute-of-technology-bombay-resume/fgnpzhygqxrq" target="_blank"
-         class="block bg-blue-500 text-white text-center py-2 rounded hover:bg-blue-600">
-        Open in Overleaf
-      </a>
-    </div>
-  </div>
-
-  <!-- Card 4 -->
-  <div class="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition">
-    <img src="https://writelatex.s3.amazonaws.com/published_ver/22185.jpeg?X-Amz-Expires=14400&X-Amz-Date=20250812T231921Z&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAWJBOALPNFPV7PVH5/20250812/us-east-1/s3/aws4_request&X-Amz-SignedHeaders=host&X-Amz-Signature=1adeea7853d6051db5a311358c9a6b130f992a63f929dbe948c619792202c85e" alt="CS/IT/SWE Template" class="w-full h-40 object-cover">
-    <div class="p-4">
-      <h3 class="text-lg font-semibold mb-2">CS / IT / SWE Resume</h3>
-      <a href="https://www.overleaf.com/latex/templates/cs-slash-it-slash-swe-resume-template/ncxgzcgknkmf" target="_blank"
-         class="block bg-blue-500 text-white text-center py-2 rounded hover:bg-blue-600">
-        Open in Overleaf
-      </a>
-    </div>
-  </div>
-
-  <!-- Card 5 -->
-  <div class="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition">
-    <img src="https://writelatex.s3.amazonaws.com/published_ver/26352.jpeg?X-Amz-Expires=14400&X-Amz-Date=20250812T231948Z&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAWJBOALPNFPV7PVH5/20250812/us-east-1/s3/aws4_request&X-Amz-SignedHeaders=host&X-Amz-Signature=4e9657a6de9badac9ade65e6da030ca4d39951d8699344edd50092a3cc20d1d8" alt="FAANGPath Simple Template" class="w-full h-40 object-cover">
-    <div class="p-4">
-      <h3 class="text-lg font-semibold mb-2">FAANGPath Simple Template</h3>
-      <a href="https://www.overleaf.com/latex/templates/faangpath-simple-template/npsfpdqnxmbc" target="_blank"
-         class="block bg-blue-500 text-white text-center py-2 rounded hover:bg-blue-600">
-        Open in Overleaf
-      </a>
-    </div>
-  </div>
-
-  <!-- Card 6 -->
-  <div class="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition">
-    <img src="https://writelatex.s3.amazonaws.com/published_ver/28859.jpeg?X-Amz-Expires=14400&X-Amz-Date=20250812T232024Z&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAWJBOALPNFPV7PVH5/20250812/us-east-1/s3/aws4_request&X-Amz-SignedHeaders=host&X-Amz-Signature=a80d1214ba3dcb4294bb1cbe9ed26ba268f5e34ff071a39a4854afd1d34b71cc" alt="Elegant Resume Template" class="w-full h-40 object-cover">
-    <div class="p-4">
-      <h3 class="text-lg font-semibold mb-2">Elegant Resume Template</h3>
-      <a href="https://www.overleaf.com/latex/templates/elegant-resume-template/gcnbfnxkcwby" target="_blank"
-         class="block bg-blue-500 text-white text-center py-2 rounded hover:bg-blue-600">
-        Open in Overleaf
-      </a>
-    </div>
-  </div>
-
 </div>
+
+<!-- Animation Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add staggered animation to template cards
+    const templateCards = document.querySelectorAll('.group');
+    templateCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.classList.add('animate-slide-up');
+    });
+    
+    // Smooth scroll to templates section
+    const templateLinks = document.querySelectorAll('a[href="#templates"]');
+    templateLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('templates').scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+});
+</script>
 {% endblock %}

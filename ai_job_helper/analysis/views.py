@@ -1,7 +1,7 @@
 # analysis/views.py
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from groq import Groq
+from ai_agents.ai_service import AIService
 
 @login_required
 def home(request):
@@ -17,47 +17,32 @@ def home(request):
         elif not job_description:
             ai_suggestions = "❌ Please enter a job description."
         else:
-            prompt = f"""
-You are an expert resume reviewer.
-The following is the candidate's resume:
+            try:
+                # Use AI service for resume analysis
+                ai_service = AIService()
+                analysis_result = ai_service.analyze_resume(resume_text, job_description)
+                
+                if analysis_result:
+                    # Store the full analysis result for detailed display
+                    ai_suggestions = analysis_result
+                    rewritten_sections = analysis_result.get('rewritten_sections', {})
+                    
+                    # Combine rewritten sections into a full resume
+                    if rewritten_sections:
+                        rewritten_resume = f"""
+{rewritten_sections.get('summary', '')}
 
-{resume_text}
+EXPERIENCE:
+{chr(10).join(rewritten_sections.get('experience', []))}
 
-The following is the job description:
-
-{job_description}
-
-1. Analyze the resume against the job description.
-2. Suggest clear, actionable improvements.
-3. Rewrite the ENTIRE resume so it is optimized for this job description while keeping the tone professional.
-Format your response as:
-
-### Suggestions:
-[bullet points]
-
-### Rewritten Resume:
-[full optimized resume text]
+SKILLS:
+{rewritten_sections.get('skills', '')}
 """
-
-            client = Groq()
-            completion = client.chat.completions.create(
-                model="meta-llama/llama-4-maverick-17b-128e-instruct",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.7,
-                max_completion_tokens=1500,
-                top_p=1,
-                stream=False
-            )
-
-            ai_response = completion.choices[0].message.content  # ✅ Correct extraction
-
-            # Optional: split into suggestions + rewritten resume
-            if "### Rewritten Resume:" in ai_response:
-                parts = ai_response.split("### Rewritten Resume:")
-                ai_suggestions = parts[0].replace("### Suggestions:", "").strip()
-                rewritten_resume = parts[1].strip()
-            else:
-                ai_suggestions = ai_response
+                else:
+                    ai_suggestions = "❌ Failed to analyze resume. Please try again."
+                    
+            except Exception as e:
+                ai_suggestions = f"❌ Error analyzing resume: {str(e)}"
 
     return render(request, "analysis/home.html", {
         "ai_suggestions": ai_suggestions,

@@ -1,10 +1,10 @@
 import json
-import requests
 from bson import ObjectId
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Exam, Question, Answer
 from django.conf import settings
+from ai_agents.ai_service import AIService
 
 @login_required
 def home(request):
@@ -22,158 +22,190 @@ def home(request):
 @login_required
 def exam_loading(request):
     """
-    Initiates the exam generation process by calling the Gemini API.
-    The API call is configured to return a structured JSON response.
+    Initiates the exam generation process using AI agents.
     """
     try:
         job_role = request.session.get("job_role")
         if not job_role:
             return redirect("exam_home")
 
-        # Use the settings to get the API key safely.
-        gemini_api_key = getattr(settings, "GEMINI_API_KEY", None)
-        if not gemini_api_key:
-            return render(request, "exam/error.html", {"message": "Gemini API key not configured"})
+        # Use AI service to generate questions
+        ai_service = AIService()
+        questions_data = ai_service.generate_exam_questions(job_role, 10)
+        
+        if not questions_data or 'questions' not in questions_data:
+            return render(request, "exam/error.html", {"message": "Failed to generate exam questions"})
 
-        # API endpoint for the Gemini model.
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={gemini_api_key}"
-
-        # Define the JSON schema for the desired output.
-        # This tells the model exactly what structure to return, making parsing reliable.
-        response_schema = {
-            "type": "ARRAY",
-            "items": {
-                "type": "OBJECT",
-                "properties": {
-                    "question": {"type": "STRING"},
-                    "options": {
-                        "type": "OBJECT",
-                        "properties": {
-                            "A": {"type": "STRING"},
-                            "B": {"type": "STRING"},
-                            "C": {"type": "STRING"},
-                            "D": {"type": "STRING"}
-                        },
-                        "propertyOrdering": ["A", "B", "C", "D"]
-                    },
-                    "correct": {"type": "STRING"}
-                },
-                "propertyOrdering": ["question", "options", "correct"]
-            }
-        }
-
-        # The prompt is simplified because the response schema handles the structure.
-        prompt_text = (
-            f"Create a 30-question multiple-choice exam for the job role '{job_role}'. "
-            "Each question should have exactly 4 concise options. "
-            "'correct' must be one of 'A', 'B', 'C', 'D'."
+        # Create the exam and questions in the database.
+        exam = Exam.objects.create(
+            user=request.user,
+            job_role=job_role
         )
 
-        payload = {
-            "contents": [
-                {
-                    "parts": [
-                        {"text": prompt_text}
-                    ]
-                }
-            ],
-            "generationConfig": {
-                "responseMimeType": "application/json",
-                "responseSchema": response_schema
-            }
-        }
+        # Store exam ID in session for navigation
+        request.session['current_exam_id'] = str(exam._id)
 
-        headers = {"Content-Type": "application/json"}
-        try:
-            # Make the API call with the structured payload.
-            r = requests.post(url, headers=headers, data=json.dumps(payload), timeout=60)
-            r.raise_for_status()  # Raises an HTTPError for bad responses
-            data = r.json()
-
-            # For a structured output, the JSON is in a specific part of the response.
-            raw_text_json = data["candidates"][0]["content"]["parts"][0]["text"]
-            questions_data = json.loads(raw_text_json)
-
-        except (requests.RequestException, json.JSONDecodeError, KeyError, IndexError, ValueError) as e:
-            return render(request, "exam/error.html", {"message": f"API request failed or response invalid: {str(e)}"})
-
-        if not questions_data or not isinstance(questions_data, list):
-            return render(request, "exam/error.html", {"message": "Invalid response format from AI"})
-
-        try:
-            # Create the exam first
-            exam = Exam.objects.create(
-                user=request.user,
-                job_role=job_role
+        for question_data in questions_data['questions']:
+            question = Question.objects.create(
+                exam=exam,
+                text=question_data["question"],
+                option_a=question_data["options"][0] if len(question_data["options"]) > 0 else "",
+                option_b=question_data["options"][1] if len(question_data["options"]) > 1 else "",
+                option_c=question_data["options"][2] if len(question_data["options"]) > 2 else "",
+                option_d=question_data["options"][3] if len(question_data["options"]) > 3 else "",
+                correct_option=question_data["correct_answer"],
+                explanation=question_data.get("explanation", "")
             )
 
-            # Then create all questions
-            for q in questions_data:
-                Question.objects.create(
-                    exam=exam,
-                    text=q["question"],
-                    option_a=q["options"]["A"],
-                    option_b=q["options"]["B"],
-                    option_c=q["options"]["C"],
-                    option_d=q["options"]["D"],
-                    correct_option=q["correct"]
-                )
-
-            return redirect("exam_test", exam_id=str(exam._id))
-
-        except Exception as e:
-            # If anything goes wrong during exam/question creation, clean up and show error
-            if 'exam' in locals():
-                exam.delete()
-            return render(request, "exam/error.html", {"message": f"Failed to create exam: {str(e)}"})
+        # Redirect to the first question.
+        return redirect("exam_test", exam_id=str(exam._id), question_num=1)
 
     except Exception as e:
-        # A broad exception handler to catch any other issues.
-        return render(request, "exam/error.html", {"message": f"An unexpected error occurred: {str(e)}"})
-
+        return render(request, "exam/error.html", {"message": f"Error generating exam: {str(e)}"})
 
 @login_required
-def exam_test(request, exam_id):
+def exam_test(request, exam_id, question_num):
     """
-    Displays the exam questions for the user to take the test.
-    Handles form submission after the user has answered all questions.
+    Displays a single question for the exam (assessment style - one question per page).
+    Handles form submission to record the answer and show feedback.
     """
     try:
-        # Convert string exam_id to ObjectId for MongoDB
-        exam = Exam.objects.get(_id=ObjectId(exam_id), user=request.user)
-    except (Exam.DoesNotExist, ValueError):
-        return render(request, "exam/error.html", {"message": "Exam not found"})
+        exam = get_object_or_404(Exam, _id=ObjectId(exam_id), user=request.user)
+        questions = list(Question.objects.filter(exam=exam).order_by('_id'))
+        
+        if not questions:
+            return render(request, "exam/error.html", {"message": "No questions found for this exam"})
+        
+        # Get the current question (1-indexed)
+        current_question = questions[question_num - 1]
+        
+        # Get user's answer for this question
+        try:
+            user_answer = Answer.objects.get(question=current_question, user=request.user)
+            selected_option = user_answer.selected_option
+            is_correct = user_answer.is_correct
+        except Answer.DoesNotExist:
+            selected_option = None
+            is_correct = None
+        
+        # Handle form submission
+        if request.method == "POST":
+            action = request.POST.get("action", "answer")
+            
+            if action == "answer":
+                selected_option = request.POST.get("answer")
+                if selected_option:
+                    # Create or update the answer
+                    Answer.objects.update_or_create(
+                        question=current_question,
+                        user=request.user,
+                        defaults={
+                            'selected_option': selected_option,
+                            'is_correct': selected_option == current_question.correct_option
+                        }
+                    )
+                    # Refresh the answer data
+                    user_answer = Answer.objects.get(question=current_question, user=request.user)
+                    selected_option = user_answer.selected_option
+                    is_correct = user_answer.is_correct
+            
+            elif action == "next":
+                # Move to next question or finish exam
+                if question_num < len(questions):
+                    return redirect("exam_test", exam_id=exam_id, question_num=question_num + 1)
+                else:
+                    return redirect("exam_result")
+        
+        # Calculate progress
+        progress = (question_num / len(questions)) * 100
+        
+        context = {
+            'question': current_question,
+            'question_num': question_num,
+            'total_questions': len(questions),
+            'progress': progress,
+            'exam': exam,
+            'exam_id': exam_id,
+            'selected_option': selected_option,
+            'is_correct': is_correct,
+            'show_feedback': selected_option is not None
+        }
+        
+        return render(request, "exam/test.html", context)
+        
+    except (IndexError, ValueError) as e:
+        return render(request, "exam/error.html", {"message": f"Invalid question number: {str(e)}"})
+    except Exception as e:
+        return render(request, "exam/error.html", {"message": f"Error loading question: {str(e)}"})
 
-    questions = exam.questions.all()
-
-    if request.method == "POST":
-        score = 0
+@login_required
+def exam_result(request):
+    """
+    Displays the exam results with detailed feedback.
+    """
+    try:
+        exam_id = request.session.get('current_exam_id')
+        if not exam_id:
+            return redirect("exam_home")
+        
+        exam = get_object_or_404(Exam, _id=ObjectId(exam_id))
+        questions = Question.objects.filter(exam=exam).order_by('_id')
+        
+        # Get user's answers
+        user_answers = {}
         for question in questions:
-            selected = request.POST.get(question.mongo_id)
-            if selected:
-                Answer.objects.create(
-                    question=question,
-                    user=request.user,
-                    selected_option=selected
-                )
-                if selected == question.correct_option:
-                    score += 1
-        exam.score = score
+            try:
+                answer = Answer.objects.get(question=question, user=request.user)
+                user_answers[question._id] = answer
+            except Answer.DoesNotExist:
+                user_answers[question._id] = None
+        
+        # Calculate score
+        correct_answers = sum(1 for answer in user_answers.values() 
+                            if answer and answer.is_correct)
+        total_questions = questions.count()
+        score_percentage = (correct_answers / total_questions) * 100 if total_questions > 0 else 0
+        
+        # Save the score to the exam record
+        exam.score = int(score_percentage)
         exam.save()
-        return redirect("exam_result", exam_id=str(exam._id))
-
-    return render(request, "exam/test.html", {"exam": exam, "questions": questions})
-
+        
+        # Prepare question results for template
+        question_results = []
+        for question in questions:
+            user_answer = user_answers.get(question._id)
+            question_results.append({
+                'question': question,
+                'selected_option': user_answer.selected_option if user_answer else None,
+                'correct_option': question.correct_option,
+                'is_correct': user_answer.is_correct if user_answer else False
+            })
+        
+        context = {
+            'exam': exam,
+            'questions': questions,
+            'user_answers': user_answers,
+            'correct_answers': correct_answers,
+            'total_questions': total_questions,
+            'score_percentage': score_percentage,
+            'percentage': score_percentage,
+            'correct_count': correct_answers,
+            'question_results': question_results
+        }
+        
+        return render(request, "exam/result.html", context)
+        
+    except Exception as e:
+        return render(request, "exam/error.html", {"message": f"Error loading results: {str(e)}"})
 
 @login_required
-def exam_result(request, exam_id):
+def start_exam(request, exam_id):
     """
-    Displays the user's exam results.
+    Starts a specific exam by setting it in the session.
     """
     try:
-        # Convert string exam_id to ObjectId for MongoDB
-        exam = Exam.objects.get(_id=ObjectId(exam_id), user=request.user)
-    except (Exam.DoesNotExist, ValueError):
-        return render(request, "exam/error.html", {"message": "Exam not found"})
-    
-    return render(request, "exam/result.html", {"exam": exam})
+        exam = get_object_or_404(Exam, _id=ObjectId(exam_id), user=request.user)
+        request.session['current_exam_id'] = str(exam._id)
+        return redirect("exam_test", question_num=1)
+    except Exception as e:
+        return render(request, "exam/error.html", {"message": f"Error starting exam: {str(e)}"})

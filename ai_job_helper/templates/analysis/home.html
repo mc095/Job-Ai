@@ -1,19 +1,402 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Resume Analysis</h2>
-<form method="post">
-    {% csrf_token %}
-    <textarea name="job_description" rows="6" placeholder="Paste job description here..." style="width:100%"></textarea><br><br>
-    <button type="submit">Analyze</button>
-</form>
+<div class="min-h-screen py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header Section -->
+        <div class="text-center mb-12 animate-fade-in">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl shadow-xl mb-6">
+                <i class="fas fa-search text-white text-3xl"></i>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-900 via-primary-600 to-secondary-600 bg-clip-text text-transparent mb-4">
+                Resume Analysis
+            </h1>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                Get AI-powered analysis of your resume against job descriptions and receive personalized improvement suggestions
+            </p>
+        </div>
 
-{% if ai_suggestions %}
-    <h3>Suggestions</h3>
-    <pre>{{ ai_suggestions }}</pre>
-{% endif %}
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+            <!-- Analysis Form -->
+            <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8">
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-10 h-10 bg-gradient-to-br from-accent-500 to-green-500 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-edit text-white"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800">Analyze Your Resume</h2>
+                </div>
 
-{% if rewritten_resume %}
-    <h3>Rewritten Resume</h3>
-    <pre>{{ rewritten_resume }}</pre>
-{% endif %}
+                <form method="post" class="space-y-6" id="analysisForm">
+                    {% csrf_token %}
+                    
+                    <div class="space-y-2">
+                        <label for="job_description" class="block text-sm font-semibold text-gray-700">
+                            <i class="fas fa-file-alt mr-2 text-primary-500"></i>Job Description
+                        </label>
+                        <textarea name="job_description" 
+                                  id="job_description"
+                                  rows="6"
+                                  required
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none"
+                                  placeholder="Paste the job description here to analyze your resume against it..."></textarea>
+                        <p class="text-sm text-gray-500">The AI will compare your resume against this job description and provide specific recommendations</p>
+                    </div>
+
+                    <button type="submit" 
+                            class="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-xl">
+                        <i class="fas fa-search mr-2"></i>
+                        Analyze Resume
+                    </button>
+                </form>
+            </div>
+
+            <!-- Features & Benefits -->
+            <div class="space-y-8">
+                <!-- Features List -->
+                <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-star mr-3 text-accent-500"></i>
+                        What You'll Get
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-6 h-6 bg-accent-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fas fa-check text-accent-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">ATS Optimization</h4>
+                                <p class="text-sm text-gray-600">Ensure your resume passes through Applicant Tracking Systems</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-6 h-6 bg-accent-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fas fa-check text-accent-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Keyword Matching</h4>
+                                <p class="text-sm text-gray-600">Identify missing keywords and skills from the job description</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-6 h-6 bg-accent-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fas fa-check text-accent-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Content Suggestions</h4>
+                                <p class="text-sm text-gray-600">Get specific recommendations to improve your resume content</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-6 h-6 bg-accent-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fas fa-check text-accent-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Rewritten Resume</h4>
+                                <p class="text-sm text-gray-600">Receive an AI-optimized version of your resume</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gradient-to-br from-primary-50 to-primary-100 rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-bold text-primary-600 mb-2">85%</div>
+                        <div class="text-sm text-primary-800">Match Improvement</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-secondary-50 to-secondary-100 rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-bold text-secondary-600 mb-2">5k+</div>
+                        <div class="text-sm text-secondary-800">Resumes Analyzed</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        {% if ai_suggestions or rewritten_resume %}
+        <div class="mt-16 space-y-8">
+            {% if ai_suggestions %}
+                {% if ai_suggestions.ats_score %}
+                <!-- Overall Score -->
+                <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-accent-500 to-green-500 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-chart-line text-white"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold text-gray-800">Resume Analysis Score</h2>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-4xl font-bold text-primary-600">{{ ai_suggestions.ats_score }}%</div>
+                            <div class="text-sm text-gray-500">ATS Compatibility</div>
+                        </div>
+                    </div>
+                    {% if ai_suggestions.overall_feedback %}
+                    <div class="bg-blue-50 rounded-xl p-4">
+                        <p class="text-gray-700">{{ ai_suggestions.overall_feedback }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Section-by-Section Analysis -->
+                {% if ai_suggestions.section_analysis %}
+                <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8">
+                    <div class="flex items-center space-x-3 mb-8">
+                        <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-list-alt text-white"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800">Section-by-Section Analysis</h2>
+                    </div>
+                    
+                    <div class="space-y-8">
+                        {% for section_name, section_data in ai_suggestions.section_analysis.items %}
+                        <div class="border border-gray-200 rounded-xl p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4 capitalize">{{ section_name }} Section</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Strengths -->
+                                <div>
+                                    <h4 class="font-semibold text-green-600 mb-2 flex items-center">
+                                        <i class="fas fa-check-circle mr-2"></i>Strengths
+                                    </h4>
+                                    <ul class="space-y-1">
+                                        {% for strength in section_data.strengths %}
+                                        <li class="text-sm text-gray-600 flex items-start">
+                                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                                            {{ strength }}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                
+                                <!-- Weaknesses -->
+                                <div>
+                                    <h4 class="font-semibold text-red-600 mb-2 flex items-center">
+                                        <i class="fas fa-exclamation-circle mr-2"></i>Areas for Improvement
+                                    </h4>
+                                    <ul class="space-y-1">
+                                        {% for weakness in section_data.weaknesses %}
+                                        <li class="text-sm text-gray-600 flex items-start">
+                                            <span class="w-1.5 h-1.5 bg-red-500 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                                            {{ weakness }}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- Suggestions -->
+                            {% if section_data.suggestions %}
+                            <div class="mt-4">
+                                <h4 class="font-semibold text-blue-600 mb-2 flex items-center">
+                                    <i class="fas fa-lightbulb mr-2"></i>Recommendations
+                                </h4>
+                                <p class="text-sm text-gray-700 bg-blue-50 rounded-lg p-3">{{ section_data.suggestions }}</p>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Missing Keywords -->
+                            {% if section_data.missing_keywords %}
+                            <div class="mt-4">
+                                <h4 class="font-semibold text-orange-600 mb-2 flex items-center">
+                                    <i class="fas fa-key mr-2"></i>Missing Keywords
+                                </h4>
+                                <div class="flex flex-wrap gap-2">
+                                    {% for keyword in section_data.missing_keywords %}
+                                    <span class="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">{{ keyword }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Rewritten Section -->
+                            {% if section_data.rewritten %}
+                            <div class="mt-4">
+                                <h4 class="font-semibold text-purple-600 mb-2 flex items-center">
+                                    <i class="fas fa-edit mr-2"></i>Improved Version
+                                </h4>
+                                <div class="bg-purple-50 rounded-lg p-3">
+                                    {% if section_data.rewritten|length > 1 %}
+                                        {% for item in section_data.rewritten %}
+                                        <p class="text-sm text-gray-700 mb-1">• {{ item }}</p>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p class="text-sm text-gray-700">{{ section_data.rewritten }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Overall Suggestions -->
+                {% if ai_suggestions.suggestions %}
+                <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-accent-500 to-green-500 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-lightbulb text-white"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800">Overall Recommendations</h2>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-6">
+                        <p class="text-gray-700">{{ ai_suggestions.suggestions }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Missing Keywords Summary -->
+                {% if ai_suggestions.missing_keywords %}
+                <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-key text-white"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800">Missing Keywords</h2>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                        {% for keyword in ai_suggestions.missing_keywords %}
+                        <span class="px-4 py-2 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">{{ keyword }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                {% else %}
+                <!-- Fallback for old format -->
+                <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-accent-500 to-green-500 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-lightbulb text-white"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800">AI Suggestions</h2>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-6">
+                        <pre class="text-sm text-gray-700 whitespace-pre-wrap font-mono">{{ ai_suggestions }}</pre>
+                    </div>
+                </div>
+                {% endif %}
+            {% endif %}
+
+            {% if rewritten_resume %}
+            <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8">
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-file-alt text-white"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800">Optimized Resume</h2>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-6">
+                    <pre class="text-sm text-gray-700 whitespace-pre-wrap font-mono">{{ rewritten_resume }}</pre>
+                </div>
+                <div class="mt-4 flex space-x-4">
+                    <button onclick="copyToClipboard('{{ rewritten_resume|escapejs }}')" 
+                            class="bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-4 py-2 rounded-xl font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200">
+                        <i class="fas fa-copy mr-2"></i>
+                        Copy Resume
+                    </button>
+                    <button onclick="downloadResume()" 
+                            class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-xl font-semibold hover:bg-gray-50 transform hover:-translate-y-0.5 transition-all duration-200">
+                        <i class="fas fa-download mr-2"></i>
+                        Download
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- How It Works -->
+        <div class="mt-16 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-3xl p-8">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">How It Works</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Simple steps to optimize your resume</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-white">1</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">Paste Job Description</h3>
+                    <p class="text-gray-600">Provide the job description you want to match</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-accent-500 to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-white">2</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">AI Analysis</h3>
+                    <p class="text-gray-600">Our AI analyzes your resume against the job requirements</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-secondary-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-white">3</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">Get Results</h3>
+                    <p class="text-gray-600">Receive suggestions and an optimized resume version</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom JavaScript -->
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Show success message
+        const button = event.target.closest('button');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check mr-2"></i>Copied!';
+        button.classList.add('bg-green-500');
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.classList.remove('bg-green-500');
+        }, 2000);
+    });
+}
+
+function downloadResume() {
+    const resumeText = `{{ rewritten_resume|escapejs }}`;
+    const blob = new Blob([resumeText], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'optimized_resume.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('analysisForm');
+    const textarea = document.getElementById('job_description');
+    
+    // Add focus effects
+    textarea.addEventListener('focus', function() {
+        this.parentElement.classList.add('ring-2', 'ring-primary-200');
+    });
+    
+    textarea.addEventListener('blur', function() {
+        this.parentElement.classList.remove('ring-2', 'ring-primary-200');
+    });
+    
+    // Auto-resize textarea
+    textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = this.scrollHeight + 'px';
+    });
+    
+    // Form submission with loading state
+    form.addEventListener('submit', function() {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Analyzing...';
+        submitBtn.disabled = true;
+    });
+});
+</script>
 {% endblock %}

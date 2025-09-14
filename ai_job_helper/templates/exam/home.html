@@ -1,16 +1,232 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">Exam Preparation</h1>
-    <form method="post" action="{% url 'exam_home' %}" class="max-w-md mx-auto">
-        {% csrf_token %}
-        <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2">Enter Job Role:</label>
-            <input type="text" name="job_role" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+<div class="min-h-screen py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header Section -->
+        <div class="text-center mb-12 animate-fade-in">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl shadow-xl mb-6">
+                <i class="fas fa-graduation-cap text-white text-3xl"></i>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-900 via-primary-600 to-secondary-600 bg-clip-text text-transparent mb-4">
+                Exam Preparation
+            </h1>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                Practice with AI-generated mock exams tailored to your job role and get detailed performance analytics
+            </p>
         </div>
-        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-            Generate Test
-        </button>
-    </form>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <!-- Exam Generator Form -->
+            <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8">
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-10 h-10 bg-gradient-to-br from-accent-500 to-green-500 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-edit text-white"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800">Generate Your Test</h2>
+                </div>
+
+                <form method="post" action="{% url 'exam_home' %}" class="space-y-6" id="examForm">
+                    {% csrf_token %}
+                    
+                    <div class="space-y-2">
+                        <label for="job_role" class="block text-sm font-semibold text-gray-700">
+                            <i class="fas fa-briefcase mr-2 text-primary-500"></i>Job Role
+                        </label>
+                        <input type="text" 
+                               name="job_role" 
+                               id="job_role"
+                               required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                               placeholder="e.g., Software Engineer, Data Scientist, Product Manager">
+                        <p class="text-sm text-gray-500">Enter the job role you're preparing for</p>
+                    </div>
+
+                    <button type="submit" 
+                            class="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-xl">
+                        <i class="fas fa-play mr-2"></i>
+                        Generate Test
+                    </button>
+                </form>
+            </div>
+
+            <!-- Features & Benefits -->
+            <div class="space-y-8">
+                <!-- Features List -->
+                <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-star mr-3 text-accent-500"></i>
+                        What You'll Get
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-6 h-6 bg-accent-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fas fa-check text-accent-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">AI-Generated Questions</h4>
+                                <p class="text-sm text-gray-600">Questions tailored to your specific job role and industry</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-6 h-6 bg-accent-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fas fa-check text-accent-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Real Exam Experience</h4>
+                                <p class="text-sm text-gray-600">One question per page, just like real professional exams</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-6 h-6 bg-accent-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fas fa-check text-accent-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Detailed Analytics</h4>
+                                <p class="text-sm text-gray-600">Comprehensive feedback and performance insights</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-6 h-6 bg-accent-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fas fa-check text-accent-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Instant Results</h4>
+                                <p class="text-sm text-gray-600">Immediate scoring and explanation of correct answers</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gradient-to-br from-primary-50 to-primary-100 rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-bold text-primary-600 mb-2">1000+</div>
+                        <div class="text-sm text-primary-800">Questions Available</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-secondary-50 to-secondary-100 rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-bold text-secondary-600 mb-2">50+</div>
+                        <div class="text-sm text-secondary-800">Job Roles</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Popular Job Roles -->
+        <div class="mt-16">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Popular Job Roles</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Click on any role to quickly generate a test</p>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <button onclick="setJobRole('Software Engineer')" 
+                        class="bg-white/80 backdrop-blur-md rounded-xl p-4 text-center hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 border border-white/20">
+                    <i class="fas fa-code text-2xl text-primary-500 mb-2"></i>
+                    <div class="text-sm font-medium text-gray-800">Software Engineer</div>
+                </button>
+                
+                <button onclick="setJobRole('Data Scientist')" 
+                        class="bg-white/80 backdrop-blur-md rounded-xl p-4 text-center hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 border border-white/20">
+                    <i class="fas fa-chart-bar text-2xl text-accent-500 mb-2"></i>
+                    <div class="text-sm font-medium text-gray-800">Data Scientist</div>
+                </button>
+                
+                <button onclick="setJobRole('Product Manager')" 
+                        class="bg-white/80 backdrop-blur-md rounded-xl p-4 text-center hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 border border-white/20">
+                    <i class="fas fa-tasks text-2xl text-secondary-500 mb-2"></i>
+                    <div class="text-sm font-medium text-gray-800">Product Manager</div>
+                </button>
+                
+                <button onclick="setJobRole('UX Designer')" 
+                        class="bg-white/80 backdrop-blur-md rounded-xl p-4 text-center hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 border border-white/20">
+                    <i class="fas fa-palette text-2xl text-green-500 mb-2"></i>
+                    <div class="text-sm font-medium text-gray-800">UX Designer</div>
+                </button>
+                
+                <button onclick="setJobRole('DevOps Engineer')" 
+                        class="bg-white/80 backdrop-blur-md rounded-xl p-4 text-center hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 border border-white/20">
+                    <i class="fas fa-server text-2xl text-purple-500 mb-2"></i>
+                    <div class="text-sm font-medium text-gray-800">DevOps Engineer</div>
+                </button>
+                
+                <button onclick="setJobRole('Marketing Manager')" 
+                        class="bg-white/80 backdrop-blur-md rounded-xl p-4 text-center hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 border border-white/20">
+                    <i class="fas fa-bullhorn text-2xl text-orange-500 mb-2"></i>
+                    <div class="text-sm font-medium text-gray-800">Marketing Manager</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- How It Works -->
+        <div class="mt-16 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-3xl p-8">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">How It Works</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Simple steps to ace your next interview</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-white">1</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">Enter Job Role</h3>
+                    <p class="text-gray-600">Specify the position you're applying for</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-accent-500 to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-white">2</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">Take the Test</h3>
+                    <p class="text-gray-600">Answer questions one by one, just like a real exam</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-secondary-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-white">3</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">Get Results</h3>
+                    <p class="text-gray-600">Review detailed feedback and improve your skills</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Custom JavaScript -->
+<script>
+function setJobRole(role) {
+    document.getElementById('job_role').value = role;
+    document.getElementById('job_role').focus();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('examForm');
+    const jobRoleInput = document.getElementById('job_role');
+    
+    // Add focus effects
+    jobRoleInput.addEventListener('focus', function() {
+        this.parentElement.classList.add('ring-2', 'ring-primary-200');
+    });
+    
+    jobRoleInput.addEventListener('blur', function() {
+        this.parentElement.classList.remove('ring-2', 'ring-primary-200');
+    });
+    
+    // Form submission with loading state
+    form.addEventListener('submit', function() {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating Test...';
+        submitBtn.disabled = true;
+    });
+    
+    // Add animation to popular job role buttons
+    const jobRoleButtons = document.querySelectorAll('button[onclick*="setJobRole"]');
+    jobRoleButtons.forEach((button, index) => {
+        button.style.animationDelay = `${index * 0.1}s`;
+        button.classList.add('animate-slide-up');
+    });
+});
+</script>
 {% endblock %}

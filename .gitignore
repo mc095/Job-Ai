@@ -7,7 +7,6 @@ ai_job_helper/migrations/
 # Virtual environment
 venv
 # Media files
-media/
 # Database files
 db.sqlite3
 # Environment variables
