@@ -157,6 +157,62 @@ class AgnoAgent:
             print(f"Error generating exam questions with Agno: {e}")
             return None
 
+    def generate_exam_questions_for_user(self, user_context, avoidance_list, job_role, num_questions=10, difficulty="medium"):
+        """Generate medium-difficulty, non-repeating questions tailored to the user.
+        user_context should include keys like resume_text, past_scores, preferences, strengths, weaknesses.
+        avoidance_list is a list of question texts to avoid repeating.
+        """
+        try:
+            # Prepare knowledge summary for conditioning
+            resume_text = (user_context or {}).get("resume_text", "")
+            past_scores = (user_context or {}).get("past_scores", [])
+            preferences = (user_context or {}).get("preferences", {})
+            strengths = (user_context or {}).get("strengths", [])
+            weaknesses = (user_context or {}).get("weaknesses", [])
+            avoided = "\n- ".join(avoidance_list or [])
+
+            prompt = f"""
+            You are an expert assessment creator and coach.
+            Create {num_questions} NEW, non-repeating, medium-difficulty MCQs for the job role: {job_role}.
+
+            PERSONALIZATION INPUTS:
+            - Resume (raw text):\n{resume_text[:6000]}
+            - Past scores (most recent first): {past_scores}
+            - Preferences: {preferences}
+            - Strengths: {strengths}
+            - Weaknesses: {weaknesses}
+
+            DO NOT duplicate or paraphrase any of these questions:
+            - {avoided}
+
+            REQUIREMENTS:
+            - Each question must be truly new relative to the avoidance list.
+            - Difficulty: {difficulty} (medium). Include realistic traps but only one correct answer.
+            - Align content with candidate's weaknesses more than strengths to train improvement.
+            - Cover a balanced spread of topics relevant to {job_role}. Avoid trivial theory.
+            - Provide 4 options (A..D). Only one is correct. Include a short, accurate explanation.
+
+            Return strict JSON with this structure:
+            {{
+              "questions": [
+                {{
+                  "question": "text",
+                  "options": ["A", "B", "C", "D"],
+                  "correct_answer": "A|B|C|D",
+                  "explanation": "text",
+                  "topic": "one-word or short topic label like react, python, css, sql, api"
+                }}
+              ]
+            }}
+            """
+            response = self.agent.run(prompt)
+            import json as _json
+            return _json.loads(str(response))
+        except Exception as e:
+            print(f"Error generating personalized exam questions with Agno: {e}")
+            # Fallback on generic method
+            return self.generate_exam_questions(job_role, num_questions)
+
     def generate_interview_questions(self, job_description):
         """Generate interview questions using Agno"""
         prompt = f"""
@@ -192,6 +248,57 @@ class AgnoAgent:
         except Exception as e:
             print(f"Error generating interview questions with Agno: {e}")
             return None
+
+    def generate_next_interview_question(self, resume_text, job_description, history, current_index, total_questions):
+        """Generate the next interview question given conversation history and constraints."""
+        try:
+            prompt = f"""
+            You are an expert interviewer. Generate the next interview question number {current_index + 1} of {total_questions}.
+            Context:
+            - Job Description: {job_description}
+            - Candidate Resume (text): {resume_text}
+            - Conversation so far (role: content lines):\n{chr(10).join([f"{m['role']}: {m['content']}" for m in history])}
+
+            Requirements:
+            - Ask ONE concise question only.
+            - Prefer questions that build on the candidate's last answer.
+            - Vary types across technical, behavioral (STAR), situational.
+            - Output ONLY the question text, no preface or formatting.
+            """
+            response = self.agent.run(prompt)
+            return str(response).strip() if response else None
+        except Exception as e:
+            print(f"Error generating next interview question with Agno: {e}")
+            return "Can you walk me through a challenging project and your specific impact?"
+
+    def generate_interview_feedback(self, resume_text, job_description, history):
+        """Generate final interview feedback and score using conversation history."""
+        try:
+            prompt = f"""
+            You are a hiring manager. Evaluate the candidate based on this interview.
+            Provide:
+            - A numeric score between 0 and 100 named score.
+            - A concise feedback paragraph named feedback.
+
+            Inputs:
+            - Job Description: {job_description}
+            - Candidate Resume (text): {resume_text}
+            - Conversation Transcript (role: content lines):\n{chr(10).join([f"{m['role']}: {m['content']}" for m in history])}
+
+            Return strict JSON: {{"score": number, "feedback": "text"}}
+            """
+            response = self.agent.run(prompt)
+            import json as _json
+            try:
+                parsed = _json.loads(str(response))
+                score = max(0, min(100, int(parsed.get("score", 75))))
+                feedback = parsed.get("feedback") or "Thank you for participating."
+                return {"score": score, "feedback": feedback}
+            except Exception:
+                return {"score": 75, "feedback": "Thank you for participating. Solid potential; add concrete, quantified examples."}
+        except Exception as e:
+            print(f"Error generating feedback with Agno: {e}")
+            return {"score": 0, "feedback": f"Error generating feedback: {e}"}
 
     def analyze_resume(self, resume_text, job_description):
         """Analyze resume using Agno"""

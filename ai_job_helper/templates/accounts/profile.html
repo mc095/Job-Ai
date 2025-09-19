@@ -85,21 +85,7 @@
                             <p class="text-sm text-gray-500">Upload your resume in PDF or DOCX format for automatic text extraction</p>
                         </div>
 
-                        <!-- Resume Text -->
-                        <div class="space-y-2">
-                            <label for="{{ form.resume_text.id_for_label }}" class="block text-sm font-semibold text-gray-700">
-                                <i class="fas fa-file-alt mr-2 text-primary-500"></i>Resume Text (Optional)
-                            </label>
-                            <textarea name="resume_text" 
-                                      id="{{ form.resume_text.id_for_label }}"
-                                      rows="6"
-                                      class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none"
-                                      placeholder="Paste your resume text here or let us extract it from your uploaded file">{{ form.resume_text.value|default:'' }}</textarea>
-                            {% if form.resume_text.errors %}
-                                <div class="text-red-500 text-sm">{{ form.resume_text.errors.0 }}</div>
-                            {% endif %}
-                            <p class="text-sm text-gray-500">This text will be used for ATS analysis and other features</p>
-                        </div>
+                        
 
                         <!-- Submit Button -->
                         <button type="submit" 
@@ -111,7 +97,7 @@
                 </div>
             </div>
 
-            <!-- Profile Preview & Resume Text -->
+            <!-- Profile Preview -->
             <div class="space-y-8">
                 <!-- Profile Preview -->
                 {% if user.userprofile.photo %}
@@ -124,23 +110,6 @@
                         <img src="{{ user.userprofile.photo.url }}" 
                              alt="Profile Photo" 
                              class="w-32 h-32 rounded-full object-cover mx-auto border-4 border-primary-200 shadow-lg">
-                    </div>
-                </div>
-{% endif %}
-
-                <!-- Resume Text Display -->
-                {% if user.userprofile.extracted_text or user.userprofile.resume_text %}
-                <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                        <i class="fas fa-file-text mr-2 text-accent-500"></i>
-                        {% if user.userprofile.extracted_text %}Extracted Resume Text{% else %}Resume Content{% endif %}
-                    </h3>
-                    <div class="bg-gray-50 rounded-xl p-4 max-h-96 overflow-y-auto">
-                        <pre class="text-sm text-gray-700 whitespace-pre-wrap font-mono">{{ user.userprofile.extracted_text|default:user.userprofile.resume_text }}</pre>
-                    </div>
-                    <div class="mt-4 text-xs text-gray-500">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        This text is used for ATS analysis and other AI-powered features
                     </div>
                 </div>
 {% endif %}
@@ -197,14 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.disabled = true;
     });
     
-    // Auto-resize textarea
-    const textarea = document.getElementById('{{ form.resume_text.id_for_label }}');
-    if (textarea) {
-        textarea.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = this.scrollHeight + 'px';
-        });
-    }
+    
 });
 </script>
 {% endblock %}

@@ -37,6 +37,7 @@ class Question(models.Model):
     option_d = models.CharField(max_length=255)
     correct_option = models.CharField(max_length=1, default='A')
     explanation = models.TextField(blank=True, null=True)
+    topic = models.CharField(max_length=128, blank=True, null=True)
 
     def __str__(self):
         return f"Question for {self.exam.job_role}"

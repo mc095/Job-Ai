@@ -788,6 +788,7 @@
             <h3>Live Preview</h3>
             <div class="preview-controls">
                 <button id="save-pdf" class="btn-secondary">Save as PDF</button>
+                <button id="save-to-profile" class="btn-primary">Save to Profile</button>
             </div>
         </div>
         
@@ -955,6 +956,25 @@ document.addEventListener('DOMContentLoaded', function() {
             `);
             printWindow.document.close();
             printWindow.print();
+        });
+    }
+    
+    // Save to Profile button
+    const saveToProfileBtn = document.getElementById('save-to-profile');
+    if (saveToProfileBtn) {
+        saveToProfileBtn.addEventListener('click', async function() {
+            try {
+                // Serialize current preview into plain text
+                const preview = document.getElementById('resume-preview');
+                const text = preview ? preview.innerText : '';
+                const form = new FormData();
+                form.append('text', text);
+                const resp = await fetch('{% url "save_resume_to_profile" %}', { method: 'POST', body: form, headers: { 'X-CSRFToken': document.querySelector('input[name="csrfmiddlewaretoken"]').value } });
+                const data = await resp.json();
+                alert(data.message || (data.success ? 'Saved to profile.' : 'Failed to save.'));
+            } catch (e) {
+                alert('Failed to save to profile.');
+            }
         });
     }
     

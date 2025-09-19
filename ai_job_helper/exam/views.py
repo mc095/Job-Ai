@@ -29,9 +29,42 @@ def exam_loading(request):
         if not job_role:
             return redirect("exam_home")
 
-        # Use AI service to generate questions
+        # Build user context for personalization
+        resume_text = getattr(request.user.userprofile, 'resume_text', '') or ''
+        # Collect past exam scores (latest 10)
+        from .models import Exam as ExamModel
+        past_scores = list(ExamModel.objects.filter(user=request.user).order_by('-created_at').values_list('score', flat=True)[:10])
+        # Pull preferences and strengths/weaknesses from AgentMemory (if exists)
+        from analysis.models import AgentMemory
+        try:
+            mem = AgentMemory.objects.get(user=request.user)
+            preferences = mem.preferences or {}
+            strengths = mem.strengths or []
+            weaknesses = mem.weaknesses or []
+        except AgentMemory.DoesNotExist:
+            preferences = {}
+            strengths = []
+            weaknesses = []
+        # Avoid repeating recent questions for this role (latest 50)
+        from .models import Question as QModel
+        recent_qs = list(QModel.objects.filter(exam__user=request.user, exam__job_role=job_role).order_by('-_id').values_list('text', flat=True)[:50])
+        user_context = {
+            'resume_text': resume_text,
+            'past_scores': past_scores,
+            'preferences': preferences,
+            'strengths': strengths,
+            'weaknesses': weaknesses
+        }
+
+        # Use AI service to generate personalized, non-repeating questions
         ai_service = AIService()
-        questions_data = ai_service.generate_exam_questions(job_role, 10)
+        questions_data = ai_service.generate_exam_questions_for_user(
+            user_context=user_context,
+            avoidance_list=recent_qs,
+            job_role=job_role,
+            num_questions=10,
+            difficulty="medium",
+        )
         
         if not questions_data or 'questions' not in questions_data:
             return render(request, "exam/error.html", {"message": "Failed to generate exam questions"})
@@ -46,6 +79,7 @@ def exam_loading(request):
         request.session['current_exam_id'] = str(exam._id)
 
         for question_data in questions_data['questions']:
+            topic = question_data.get("topic") or None
             question = Question.objects.create(
                 exam=exam,
                 text=question_data["question"],
@@ -54,7 +88,8 @@ def exam_loading(request):
                 option_c=question_data["options"][2] if len(question_data["options"]) > 2 else "",
                 option_d=question_data["options"][3] if len(question_data["options"]) > 3 else "",
                 correct_option=question_data["correct_answer"],
-                explanation=question_data.get("explanation", "")
+                explanation=question_data.get("explanation", ""),
+                topic=topic
             )
 
         # Redirect to the first question.

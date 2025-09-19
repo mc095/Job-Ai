@@ -63,32 +63,35 @@ def interview_chat(request, session_id):
 
         # Check if the interview is over or if a new question is needed
         if session.current_question >= session.total_questions:
-            # Generate and save final feedback
-            feedback = generate_feedback(session, history)
-            InterviewMessage.objects.create(session=session, role="interviewer", content=feedback)
-            
-            # Parse the feedback response for score and feedback text
-            try:
-                parts = feedback.split("FEEDBACK:", 1)
-                score_part = parts[0].strip()
-                feedback_part = parts[1].strip() if len(parts) > 1 else feedback
-                
-                # Extract score
-                score = float(score_part.replace("SCORE:", "").strip())
-                
-                # Save score and feedback
-                session.performance_score = score
-                session.feedback_summary = feedback_part
+            # Generate and save final feedback using AI agent
+            ai_service = AIService()
+            feedback_data = ai_service.generate_interview_feedback(
+                resume_text=session.resume_text,
+                job_description=session.job_description,
+                history=history,
+            )
+            if isinstance(feedback_data, dict):
+                feedback_msg = f"SCORE: {feedback_data.get('score', 0)}\nFEEDBACK: {feedback_data.get('feedback', '')}"
+                InterviewMessage.objects.create(session=session, role="interviewer", content=feedback_msg)
+                session.performance_score = feedback_data.get('score', 0)
+                session.feedback_summary = feedback_data.get('feedback', '')
                 session.completed = True
-            except Exception as e:
-                print(f"Error parsing feedback: {str(e)}")
-                session.completed = True
-                # Set default values if parsing fails
+            else:
+                # Fallback behavior
+                InterviewMessage.objects.create(session=session, role="interviewer", content=str(feedback_data))
                 session.performance_score = 0
-                session.feedback_summary = feedback
+                session.feedback_summary = str(feedback_data)
+                session.completed = True
         else:
-            # Generate and save the next question
-            next_q = generate_interview_question(session.resume_text, session.job_description, history)
+            # Generate and save the next question using AI agent with context
+            ai_service = AIService()
+            next_q = ai_service.generate_next_interview_question(
+                resume_text=session.resume_text,
+                job_description=session.job_description,
+                history=history,
+                current_index=session.current_question,
+                total_questions=session.total_questions,
+            )
             InterviewMessage.objects.create(session=session, role="interviewer", content=next_q)
             session.current_question += 1
 
@@ -103,59 +106,11 @@ def interview_chat(request, session_id):
 
 
 def generate_interview_question(resume, jd, history):
-    """
-    Helper function to generate interview questions using AI agents.
-    """
-    try:
-        ai_service = AIService()
-        questions_data = ai_service.generate_interview_questions(jd)
-        
-        if questions_data and 'questions' in questions_data and questions_data['questions']:
-            # Get the next question based on current question number
-            current_q_num = len([m for m in history if m['role'] == 'interviewer']) - 1  # Subtract welcome message
-            if current_q_num < len(questions_data['questions']):
-                return questions_data['questions'][current_q_num]['question']
-        
-        # Fallback to a generic question
-        return "Can you tell me about a challenging project you worked on and how you overcame the obstacles?"
-        
-    except Exception as e:
-        return f"Error generating question: {str(e)}"
-
-
-def generate_feedback(session, history):
-    """
-    Helper function to generate final interview feedback using AI agents.
-    """
-    try:
-        # Prepare conversation context
-        conversation = "\n".join([f"{m['role']}: {m['content']}" for m in history])
-        
-        # Use AI service for feedback generation
-        ai_service = AIService()
-        
-        # For now, we'll use a simple scoring mechanism
-        # In a real implementation, you'd want to use AI to analyze the conversation
-        score = 75  # Default score
-        feedback = f"""
-        SCORE: {score}
-        FEEDBACK: Thank you for participating in this interview. Based on our conversation, I can see that you have relevant experience and skills for this position. Here are some key observations:
-        
-        Strengths:
-        - Good communication skills
-        - Relevant technical background
-        - Shows enthusiasm for the role
-        
-        Areas for Improvement:
-        - Consider providing more specific examples
-        - Practice explaining complex technical concepts
-        - Prepare more detailed responses about your achievements
-        
-        Overall Assessment:
-        You demonstrated a solid understanding of the role requirements and showed good potential. With some additional preparation and experience, you could be a strong candidate for this position.
-        """
-        
-        return feedback
-        
-    except Exception as e:
-        return f"SCORE: 0\nFEEDBACK: Error generating feedback: {str(e)}"
+    """Deprecated: retained for backward compatibility."""
+    ai_service = AIService()
+    data = ai_service.generate_interview_questions(jd)
+    if data and 'questions' in data and data['questions']:
+        current_q_num = len([m for m in history if m['role'] == 'interviewer']) - 1
+        if 0 <= current_q_num < len(data['questions']):
+            return data['questions'][current_q_num]['question']
+    return "Can you tell me about a challenging project you worked on and how you overcame the obstacles?"
