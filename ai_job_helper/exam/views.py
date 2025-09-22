@@ -63,7 +63,7 @@ def exam_loading(request):
             avoidance_list=recent_qs,
             job_role=job_role,
             num_questions=10,
-            difficulty="medium",
+            difficulty="mixed",
         )
         
         if not questions_data or 'questions' not in questions_data:

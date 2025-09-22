@@ -51,15 +51,35 @@ def interview_chat(request, session_id):
     except (InterviewSession.DoesNotExist, ValueError):
         return render(request, "interview/error.html", {"message": "Interview session not found"})
 
-    messages = session.messages.all().order_by("timestamp")
+    chat_messages = session.messages.all().order_by("timestamp")
 
     if request.method == "POST" and not session.completed:
         candidate_answer = request.POST.get("answer")
         InterviewMessage.objects.create(session=session, role="candidate", content=candidate_answer)
 
         # Prepare conversation history
-        history = [{"role": m.role, "content": m.content} for m in messages]
+        history = [{"role": m.role, "content": m.content} for m in chat_messages]
         history.append({"role": "candidate", "content": candidate_answer})
+
+        # Global application performance context
+        try:
+            from analysis.models import AgentMemory
+            mem = AgentMemory.objects.get(user=request.user)
+            strengths = ", ".join(mem.strengths or [])
+            weaknesses = ", ".join(mem.weaknesses or [])
+        except Exception:
+            strengths = ""
+            weaknesses = ""
+        try:
+            from exam.models import Exam
+            past_scores = list(Exam.objects.filter(user=request.user).order_by('-created_at').values_list('score', flat=True)[:5])
+        except Exception:
+            past_scores = []
+        system_context = (
+            f"Global context — recent scores: {past_scores}; strengths: {strengths}; weaknesses: {weaknesses}. "
+            f"Ask concise, specific questions only."
+        )
+        history.insert(0, {"role": "system", "content": system_context})
 
         # Check if the interview is over or if a new question is needed
         if session.current_question >= session.total_questions:
@@ -71,7 +91,10 @@ def interview_chat(request, session_id):
                 history=history,
             )
             if isinstance(feedback_data, dict):
-                feedback_msg = f"SCORE: {feedback_data.get('score', 0)}\nFEEDBACK: {feedback_data.get('feedback', '')}"
+                short_feedback = (feedback_data.get('feedback', '') or '').strip()
+                if len(short_feedback) > 320:
+                    short_feedback = short_feedback[:317] + '...'
+                feedback_msg = f"SCORE: {feedback_data.get('score', 0)}\nFEEDBACK: {short_feedback}"
                 InterviewMessage.objects.create(session=session, role="interviewer", content=feedback_msg)
                 session.performance_score = feedback_data.get('score', 0)
                 session.feedback_summary = feedback_data.get('feedback', '')
@@ -92,6 +115,8 @@ def interview_chat(request, session_id):
                 current_index=session.current_question,
                 total_questions=session.total_questions,
             )
+            if next_q and len(next_q) > 240:
+                next_q = next_q[:237] + '...'
             InterviewMessage.objects.create(session=session, role="interviewer", content=next_q)
             session.current_question += 1
 
@@ -100,7 +125,7 @@ def interview_chat(request, session_id):
 
     return render(request, "interview/chat.html", {
         "session": session,
-        "messages": messages,
+        "chat_messages": chat_messages,
         "is_completed": session.completed
     })
 

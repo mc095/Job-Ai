@@ -1,18 +1,59 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Training Chat - {{ session.job_description|truncatechars:50 }}</h2>
-<div style="border:1px solid #ccc; padding:10px; height:400px; overflow-y:auto;">
-    {% for msg in messages %}
-        {% if msg.role == "user" %}
-            <p><strong>You:</strong> {{ msg.content }}</p>
-        {% else %}
-            <p style="color:blue;"><strong>Bot:</strong> {{ msg.content|linebreaks }}</p>
-        {% endif %}
-    {% endfor %}
+<div class="min-h-[calc(100vh-8rem)]">
+  <div class="max-w-4xl mx-auto px-4 pt-6">
+    <div class="mb-4">
+      <h2 class="text-xl font-semibold text-gray-800">Interview Training</h2>
+      <p class="text-sm text-gray-500">{{ session.job_description|truncatechars:120 }}</p>
+    </div>
+
+    <div id="chatScroll" class="bg-white/90 backdrop-blur rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6 h-[60vh] overflow-y-auto">
+      <div class="space-y-6">
+        {% for msg in chat_messages %}
+          {% if msg.role == "user" %}
+            <div class="flex justify-end">
+              <div class="max-w-[80%] bg-primary-600 text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-md">
+                <div class="text-xs opacity-80 mb-1">You</div>
+                <div class="whitespace-pre-wrap">{{ msg.content }}</div>
+              </div>
+            </div>
+          {% else %}
+            <div class="flex items-start space-x-3">
+              <div class="w-8 h-8 rounded-full bg-gradient-to-br from-secondary-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">I</div>
+              <div class="max-w-[85%] bg-gray-50 border border-gray-200 text-gray-800 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+                <div class="text-xs text-gray-500 mb-1">Interviewer</div>
+                <div class="prose prose-sm max-w-none">{{ msg.content|linebreaks }}</div>
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <form method="post" class="mt-4" id="chatForm">
+      {% csrf_token %}
+      <div class="flex items-end space-x-3">
+        <textarea name="message" rows="2" required placeholder="Type your response..."
+                  class="flex-1 px-4 py-3 bg-white rounded-2xl border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"></textarea>
+        <button type="submit" class="bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-semibold px-5 py-3 rounded-xl shadow hover:shadow-lg transition-all">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
-<form method="post" style="margin-top:10px;">
-    {% csrf_token %}
-    <input type="text" name="message" placeholder="Type your reply..." required style="width:80%;">
-    <button type="submit">Send</button>
-</form>
+
+{% block extra_js %}
+<script>
+  const chat = document.getElementById('chatScroll');
+  if (chat) { chat.scrollTop = chat.scrollHeight; }
+  const form = document.getElementById('chatForm');
+  if (form) {
+    form.addEventListener('submit', () => {
+      const btn = form.querySelector('button[type="submit"]');
+      if (btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true; }
+    });
+  }
+</script>
+{% endblock %}
 {% endblock %}

@@ -41,6 +41,12 @@ def create_portfolio(request):
             
             messages.success(request, 'Portfolio data saved! Now choose a template.')
             return redirect('select_template')
+        else:
+            # Surface validation errors to the user
+            from django.forms.utils import ErrorDict
+            err: ErrorDict = form.errors
+            if err:
+                messages.error(request, 'Please complete all required fields before continuing.')
     else:
         form = PortfolioDataForm()
     

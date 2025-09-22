@@ -35,7 +35,7 @@
 
         <!-- Main Form -->
         <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
-            <form method="post" class="space-y-0" id="portfolioForm">
+            <form method="post" action="{% url 'create_portfolio' %}" class="space-y-0" id="portfolioForm">
                 {% csrf_token %}
                 
                 <!-- Personal Information Section -->
@@ -210,20 +210,21 @@
                         <h2 class="text-2xl font-bold text-gray-800">Work Experience</h2>
                     </div>
                     
-                    <div class="space-y-2">
-                        <label for="{{ form.experience.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+                    <div class="space-y-4">
+                        <label class="block text-sm font-semibold text-gray-700">
                             Experience <span class="text-red-500">*</span>
                         </label>
-                        <textarea name="experience" 
-                                  id="{{ form.experience.id_for_label }}"
-                                  rows="6"
-                                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none"
-                                  placeholder="Enter your work experience in this format:&#10;&#10;Company Name | Job Title | Duration | Description&#10;Example:&#10;&#10;Google | Software Engineer | 2020 - Present | Developed scalable web applications using React and Node.js&#10;Microsoft | Frontend Developer | 2018 - 2020 | Built responsive user interfaces and improved user experience"
-                                  required></textarea>
-                        <p class="text-sm text-gray-500">{{ form.experience.help_text }}</p>
-                        {% if form.experience.errors %}
-                            <div class="text-red-500 text-sm">{{ form.experience.errors.0 }}</div>
-                        {% endif %}
+                        <div id="expList" class="space-y-3"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <input id="expCompany" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Company">
+                            <input id="expRole" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Role / Title">
+                            <input id="expDuration" type="text" class="px-3 py-2 border border-gray-300 rounded-lg md:col-span-2" placeholder="Duration (e.g., 2022–Present)">
+                            <textarea id="expDesc" rows="2" class="px-3 py-2 border border-gray-300 rounded-lg md:col-span-2" placeholder="Impact-driven description (2-3 bullets)"></textarea>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="button" id="addExpBtn" class="px-4 py-2 bg-primary-600 text-white rounded-lg">Add Experience</button>
+                        </div>
+                        <input type="hidden" name="experience" id="expHidden" required>
                     </div>
                 </div>
 
@@ -236,20 +237,21 @@
                         <h2 class="text-2xl font-bold text-gray-800">Education</h2>
                     </div>
                     
-                    <div class="space-y-2">
-                        <label for="{{ form.education.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+                    <div class="space-y-4">
+                        <label class="block text-sm font-semibold text-gray-700">
                             Education <span class="text-red-500">*</span>
                         </label>
-                        <textarea name="education" 
-                                  id="{{ form.education.id_for_label }}"
-                                  rows="5"
-                                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none"
-                                  placeholder="Enter your education in this format:&#10;&#10;Institution | Degree | Year | GPA (optional)&#10;Example:&#10;&#10;Stanford University | Bachelor of Science in Computer Science | 2018 | 3.8&#10;MIT | Master of Science in Software Engineering | 2020 | 3.9"
-                                  required></textarea>
-                        <p class="text-sm text-gray-500">{{ form.education.help_text }}</p>
-                        {% if form.education.errors %}
-                            <div class="text-red-500 text-sm">{{ form.education.errors.0 }}</div>
-                        {% endif %}
+                        <div id="eduList" class="space-y-3"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <input id="eduInstitution" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Institution">
+                            <input id="eduDegree" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Degree">
+                            <input id="eduYear" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Year">
+                            <input id="eduGpa" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="GPA (optional)">
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="button" id="addEduBtn" class="px-4 py-2 bg-primary-600 text-white rounded-lg">Add Education</button>
+                        </div>
+                        <input type="hidden" name="education" id="eduHidden" required>
                     </div>
                 </div>
 
@@ -263,19 +265,15 @@
                     </div>
                     
                     <div class="space-y-2">
-                        <label for="{{ form.skills.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+                        <label class="block text-sm font-semibold text-gray-700">
                             Skills <span class="text-red-500">*</span>
                         </label>
-                        <textarea name="skills" 
-                                  id="{{ form.skills.id_for_label }}"
-                                  rows="3"
-                                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none"
-                                  placeholder="Enter your skills, separated by commas:&#10;Example:&#10;&#10;JavaScript, Python, React, Node.js, Django, PostgreSQL, AWS, Docker, Git"
-                                  required></textarea>
-                        <p class="text-sm text-gray-500">{{ form.skills.help_text }}</p>
-                        {% if form.skills.errors %}
-                            <div class="text-red-500 text-sm">{{ form.skills.errors.0 }}</div>
-                        {% endif %}
+                        <div id="skillsChips" class="flex flex-wrap gap-2 bg-white/80 border border-gray-300 rounded-xl p-3"></div>
+                        <div class="flex items-center space-x-2">
+                            <input type="text" id="skillInput" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" placeholder="Add a skill and press Enter">
+                            <button type="button" id="addSkillBtn" class="px-4 py-2 bg-primary-600 text-white rounded-lg">Add</button>
+                        </div>
+                        <input type="hidden" name="skills" id="skillsHidden" required>
                     </div>
                 </div>
 
@@ -288,20 +286,23 @@
                         <h2 class="text-2xl font-bold text-gray-800">Projects</h2>
                     </div>
                     
-                    <div class="space-y-2">
-                        <label for="{{ form.projects.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+                    <div class="space-y-4">
+                        <label class="block text-sm font-semibold text-gray-700">
                             Projects <span class="text-red-500">*</span>
                         </label>
-                        <textarea name="projects" 
-                                  id="{{ form.projects.id_for_label }}"
-                                  rows="8"
-                                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none"
-                                  placeholder="Enter your projects in this format:&#10;&#10;Project Name | Short Description | Long Description | Technologies | Live URL | GitHub URL&#10;Example:&#10;&#10;E-Commerce App | A full-stack e-commerce platform | Built a complete e-commerce solution with user authentication, payment processing, and admin dashboard. Features include product catalog, shopping cart, order management, and real-time notifications. | React, Node.js, MongoDB, Stripe | https://myecommerce.com | https://github.com/username/ecommerce"
-                                  required></textarea>
-                        <p class="text-sm text-gray-500">{{ form.projects.help_text }}</p>
-                        {% if form.projects.errors %}
-                            <div class="text-red-500 text-sm">{{ form.projects.errors.0 }}</div>
-                        {% endif %}
+                        <div id="projectsList" class="space-y-3"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <input id="projTitle" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Title">
+                            <input id="projTech" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Technologies (comma-separated)">
+                            <input id="projLive" type="url" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Live URL (optional)">
+                            <input id="projRepo" type="url" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="GitHub URL (optional)">
+                            <input id="projShort" type="text" class="px-3 py-2 border border-gray-300 rounded-lg md:col-span-2" placeholder="Short description">
+                            <textarea id="projLong" rows="3" class="px-3 py-2 border border-gray-300 rounded-lg md:col-span-2" placeholder="Long description"></textarea>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="button" id="addProjectBtn" class="px-4 py-2 bg-primary-600 text-white rounded-lg">Add Project</button>
+                        </div>
+                        <input type="hidden" name="projects" id="projectsHidden" required>
                     </div>
                 </div>
 
@@ -314,19 +315,20 @@
                         <h2 class="text-2xl font-bold text-gray-800">Certifications</h2>
                     </div>
                     
-                    <div class="space-y-2">
-                        <label for="{{ form.certifications.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+                    <div class="space-y-4">
+                        <label class="block text-sm font-semibold text-gray-700">
                             Certifications
                         </label>
-                        <textarea name="certifications" 
-                                  id="{{ form.certifications.id_for_label }}"
-                                  rows="4"
-                                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none"
-                                  placeholder="Enter your certifications in this format:&#10;&#10;Certification Name | Issuer | Year&#10;Example:&#10;&#10;AWS Certified Solutions Architect | Amazon Web Services | 2023&#10;Google Cloud Professional Developer | Google | 2022"></textarea>
-                        <p class="text-sm text-gray-500">{{ form.certifications.help_text }}</p>
-                        {% if form.certifications.errors %}
-                            <div class="text-red-500 text-sm">{{ form.certifications.errors.0 }}</div>
-                        {% endif %}
+                        <div id="certList" class="space-y-3"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <input id="certName" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Certification">
+                            <input id="certIssuer" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Issuer">
+                            <input id="certYear" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Year">
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="button" id="addCertBtn" class="px-4 py-2 bg-primary-600 text-white rounded-lg">Add Certification</button>
+                        </div>
+                        <input type="hidden" name="certifications" id="certHidden">
                     </div>
                 </div>
 
@@ -404,33 +406,149 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Real-time validation
-    form.addEventListener('submit', function(e) {
-        let isValid = true;
-        const requiredFields = form.querySelectorAll('[required]');
-        
-        requiredFields.forEach(field => {
-            if (!field.value.trim()) {
-                field.classList.add('border-red-500', 'ring-2', 'ring-red-200');
-                isValid = false;
-            } else {
-                field.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
-            }
-        });
-        
-        if (!isValid) {
-            e.preventDefault();
-            alert('Please fill in all required fields.');
-        }
-    });
+    // Let native HTML5 validation handle required fields
     
-    // Auto-resize textareas
-    const textareas = form.querySelectorAll('textarea');
-    textareas.forEach(textarea => {
-        textarea.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = this.scrollHeight + 'px';
-        });
+    // Builders (skills, experience, education, projects, certifications)
+    const skills = [];
+    const skillsChips = document.getElementById('skillsChips');
+    const skillsHidden = document.getElementById('skillsHidden');
+    const skillInput = document.getElementById('skillInput');
+    const addSkillBtn = document.getElementById('addSkillBtn');
+    if (addSkillBtn) addSkillBtn.addEventListener('click', addSkill);
+    if (skillInput) skillInput.addEventListener('keydown', e => { if (e.key==='Enter'){ e.preventDefault(); addSkill(); }});
+    function renderSkills(){
+      skillsChips.innerHTML = '';
+      skills.forEach((s, i)=>{
+        const chip = document.createElement('span');
+        chip.className = 'px-3 py-1 bg-primary-100 text-primary-800 rounded-full text-sm flex items-center gap-2';
+        chip.innerHTML = `${s} <button type="button" class="ml-1 text-primary-600" onclick="removeSkill(${i})">×</button>`;
+        skillsChips.appendChild(chip);
+      });
+      skillsHidden.value = skills.join(', ');
+    }
+    window.removeSkill = function(idx){ skills.splice(idx,1); renderSkills(); }
+    function addSkill(){ const v = (skillInput?.value||'').trim(); if(!v) return; skills.push(v); if (skillInput) skillInput.value=''; renderSkills(); }
+
+    const expItems = [];
+    const expList = document.getElementById('expList');
+    const expHidden = document.getElementById('expHidden');
+    const addExpBtn = document.getElementById('addExpBtn');
+    if (addExpBtn) addExpBtn.addEventListener('click', ()=>{
+      const c = document.getElementById('expCompany').value.trim();
+      const r = document.getElementById('expRole').value.trim();
+      const d = document.getElementById('expDuration').value.trim();
+      const desc = document.getElementById('expDesc').value.trim();
+      if(!c||!r||!d||!desc) return alert('Fill all experience fields.');
+      expItems.push({c,r,d,desc});
+      document.getElementById('expCompany').value='';
+      document.getElementById('expRole').value='';
+      document.getElementById('expDuration').value='';
+      document.getElementById('expDesc').value='';
+      renderExp();
+    });
+    function renderExp(){
+      expList.innerHTML='';
+      expItems.forEach((e,i)=>{
+        const row=document.createElement('div');
+        row.className='p-3 bg-white border border-gray-200 rounded-lg flex justify-between items-start';
+        row.innerHTML=`<div><div class='font-semibold'>${e.c} — ${e.r}</div><div class='text-sm text-gray-600'>${e.d}</div><div class='text-sm mt-1'>${e.desc}</div></div><button type='button' class='text-red-600' onclick='removeExp(${i})'>Remove</button>`;
+        expList.appendChild(row);
+      });
+      expHidden.value = expItems.map(e=>`${e.c} | ${e.r} | ${e.d} | ${e.desc}`).join('\n');
+    }
+    window.removeExp = function(i){ expItems.splice(i,1); renderExp(); }
+
+    const eduItems = [];
+    const eduList = document.getElementById('eduList');
+    const eduHidden = document.getElementById('eduHidden');
+    const addEduBtn = document.getElementById('addEduBtn');
+    if (addEduBtn) addEduBtn.addEventListener('click', ()=>{
+      const inst = document.getElementById('eduInstitution').value.trim();
+      const deg = document.getElementById('eduDegree').value.trim();
+      const yr = document.getElementById('eduYear').value.trim();
+      const gpa = document.getElementById('eduGpa').value.trim();
+      if(!inst||!deg||!yr) return alert('Fill required education fields.');
+      eduItems.push({inst,deg,yr,gpa});
+      document.getElementById('eduInstitution').value='';
+      document.getElementById('eduDegree').value='';
+      document.getElementById('eduYear').value='';
+      document.getElementById('eduGpa').value='';
+      renderEdu();
+    });
+    function renderEdu(){
+      eduList.innerHTML='';
+      eduItems.forEach((e,i)=>{
+        const row=document.createElement('div');
+        row.className='p-3 bg-white border border-gray-200 rounded-lg flex justify-between items-start';
+        row.innerHTML=`<div><div class='font-semibold'>${e.inst}</div><div class='text-sm text-gray-600'>${e.deg} • ${e.yr}${e.gpa? ' • GPA '+e.gpa:''}</div></div><button type='button' class='text-red-600' onclick='removeEdu(${i})'>Remove</button>`;
+        eduList.appendChild(row);
+      });
+      eduHidden.value = eduItems.map(e=>`${e.inst} | ${e.deg} | ${e.yr}${e.gpa? ' | '+e.gpa:''}`).join('\n');
+    }
+    window.removeEdu = function(i){ eduItems.splice(i,1); renderEdu(); }
+
+    const projItems = [];
+    const projectsList = document.getElementById('projectsList');
+    const projectsHidden = document.getElementById('projectsHidden');
+    const addProjectBtn = document.getElementById('addProjectBtn');
+    if (addProjectBtn) addProjectBtn.addEventListener('click', ()=>{
+      const t=document.getElementById('projTitle').value.trim();
+      const s=document.getElementById('projShort').value.trim();
+      const l=document.getElementById('projLong').value.trim();
+      const tech=document.getElementById('projTech').value.trim();
+      const live=document.getElementById('projLive').value.trim()||'#';
+      const repo=document.getElementById('projRepo').value.trim()||'#';
+      if(!t||!s||!l||!tech) return alert('Fill all required project fields.');
+      projItems.push({t,s,l,tech,live,repo});
+      document.getElementById('projTitle').value='';
+      document.getElementById('projShort').value='';
+      document.getElementById('projLong').value='';
+      document.getElementById('projTech').value='';
+      document.getElementById('projLive').value='';
+      document.getElementById('projRepo').value='';
+      renderProjects();
+    });
+    function renderProjects(){
+      projectsList.innerHTML='';
+      projItems.forEach((p,i)=>{
+        const row=document.createElement('div');
+        row.className='p-3 bg-white border border-gray-200 rounded-lg flex justify-between items-start';
+        row.innerHTML=`<div><div class='font-semibold'>${p.t}</div><div class='text-sm text-gray-600'>${p.tech}</div><div class='text-sm mt-1'>${p.s}</div></div><button type='button' class='text-red-600' onclick='removeProject(${i})'>Remove</button>`;
+        projectsList.appendChild(row);
+      });
+      projectsHidden.value = projItems.map(p=>`${p.t} | ${p.s} | ${p.l} | ${p.tech} | ${p.live} | ${p.repo}`).join('\n');
+    }
+    window.removeProject = function(i){ projItems.splice(i,1); renderProjects(); }
+
+    const certItems = [];
+    const certList = document.getElementById('certList');
+    const certHidden = document.getElementById('certHidden');
+    const addCertBtn = document.getElementById('addCertBtn');
+    if (addCertBtn) addCertBtn.addEventListener('click', ()=>{
+      const n=document.getElementById('certName').value.trim();
+      const iss=document.getElementById('certIssuer').value.trim();
+      const y=document.getElementById('certYear').value.trim();
+      if(!n||!iss||!y) return alert('Fill all certification fields.');
+      certItems.push({n,iss,y});
+      document.getElementById('certName').value='';
+      document.getElementById('certIssuer').value='';
+      document.getElementById('certYear').value='';
+      renderCerts();
+    });
+    function renderCerts(){
+      certList.innerHTML='';
+      certItems.forEach((c,i)=>{
+        const row=document.createElement('div');
+        row.className='p-3 bg-white border border-gray-200 rounded-lg flex justify-between items-start';
+        row.innerHTML=`<div><div class='font-semibold'>${c.n}</div><div class='text-sm text-gray-600'>${c.iss} • ${c.y}</div></div><button type='button' class='text-red-600' onclick='removeCert(${i})'>Remove</button>`;
+        certList.appendChild(row);
+      });
+      certHidden.value = certItems.map(c=>`${c.n} | ${c.iss} | ${c.y}`).join('\n');
+    }
+    window.removeCert = function(i){ certItems.splice(i,1); renderCerts(); }
+
+    form.addEventListener('submit', function(){
+      skillsHidden.value = skills.join(', ');
     });
 });
 </script>

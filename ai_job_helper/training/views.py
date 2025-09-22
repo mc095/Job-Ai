@@ -17,15 +17,14 @@ def training_home(request):
             job_description=jd,
             resume_text=resume_text
         )
-        # Create initial bot message
+        # Create initial interviewer message
         initial_message = (
-            f"Hello! I'm your AI career coach. I'll help you prepare for your job interview. "
-            f"I've reviewed your resume and the job description. Would you like me to:\n\n"
-            f"1. Analyze the key requirements of the position\n"
-            f"2. Identify areas where your experience matches well\n"
-            f"3. Suggest skills you might want to develop\n"
-            f"4. Practice interview questions\n\n"
-            f"What would you like to focus on first?"
+            "I'm the Interviewer. I reviewed your resume and the job description. "
+            "We can start with: \n\n"
+            "1) A quick review of key role requirements\n"
+            "2) Mapping your experience to the JD\n"
+            "3) Practice interview questions (technical/behavioral)\n\n"
+            "Where would you like to begin?"
         )
         TrainingMessage.objects.create(session=session, role="bot", content=initial_message)
         return redirect("training_chat", session_id=str(session._id))
@@ -40,22 +39,38 @@ def training_chat(request, session_id):
     except (TrainingSession.DoesNotExist, ValueError):
         return render(request, "training/error.html", {"message": "Training session not found"})
     
-    messages = session.messages.all().order_by("timestamp")
+    chat_messages = session.messages.all().order_by("timestamp")
 
     if request.method == "POST":
         user_msg = request.POST.get("message")
         TrainingMessage.objects.create(session=session, role="user", content=user_msg)
 
         # Prepare conversation history
-        history = [{"role": m.role, "content": m.content} for m in messages]
+        history = [{"role": m.role, "content": m.content} for m in chat_messages]
         history.append({"role": "user", "content": user_msg})
 
-        # System prompt with resume & JD
+        # Global performance context and concise coaching
+        try:
+            from analysis.models import AgentMemory
+            mem = AgentMemory.objects.get(user=request.user)
+            strengths = ", ".join(mem.strengths or [])
+            weaknesses = ", ".join(mem.weaknesses or [])
+        except Exception:
+            strengths = ""
+            weaknesses = ""
+        try:
+            from exam.models import Exam
+            past_scores = list(Exam.objects.filter(user=request.user).order_by('-created_at').values_list('score', flat=True)[:5])
+        except Exception:
+            past_scores = []
+
+        # System prompt with resume & JD and global memory
         system_prompt = (
-            f"You are a career coach chatbot. The user has this resume:\n\n{session.resume_text}\n\n"
-            f"And is applying for this job:\n\n{session.job_description}\n\n"
-            "Train the user for the interview, teach them relevant skills, explain concepts from the JD, "
-            "and give external resource links for further learning. Keep it conversational."
+            f"You are an Interviewer coach. Be concise (<= 4 short sentences). Use bullets when helpful.\n\n"
+            f"Global performance: scores {past_scores}; strengths: {strengths}; weaknesses: {weaknesses}.\n\n"
+            f"Resume:\n{session.resume_text}\n\n"
+            f"Job Description:\n{session.job_description}\n\n"
+            f"Respond to the latest user message with targeted, actionable guidance."
         )
 
         payload = {
@@ -77,9 +92,11 @@ def training_chat(request, session_id):
         data = r.json()
 
         bot_reply = data["candidates"][0]["content"]["parts"][0]["text"]
+        if isinstance(bot_reply, str) and len(bot_reply) > 600:
+            bot_reply = bot_reply[:597] + "..."
 
         TrainingMessage.objects.create(session=session, role="bot", content=bot_reply)
 
         return redirect("training_chat", session_id=str(session._id))
 
-    return render(request, "training/chat.html", {"session": session, "messages": messages})
+    return render(request, "training/chat.html", {"session": session, "chat_messages": chat_messages})

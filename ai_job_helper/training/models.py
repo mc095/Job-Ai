@@ -16,7 +16,7 @@ class TrainingSession(models.Model):
 class TrainingMessage(models.Model):
     _id = djongo_models.ObjectIdField(primary_key=True, default=ObjectId)
     session = models.ForeignKey(TrainingSession, related_name="messages", on_delete=models.CASCADE)
-    role = models.CharField(max_length=10, choices=(("user", "User"), ("bot", "Bot")))
+    role = models.CharField(max_length=10, choices=(("user", "User"), ("bot", "Interviewer")))
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
