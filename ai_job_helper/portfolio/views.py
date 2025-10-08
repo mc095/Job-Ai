@@ -48,9 +48,26 @@ def create_portfolio(request):
             if err:
                 messages.error(request, 'Please complete all required fields before continuing.')
     else:
-        form = PortfolioDataForm()
+        # Prefill with existing saved data if any
+        try:
+            existing = Portfolio.objects.get(user=request.user)
+            initial_data = _flatten_portfolio_data_for_form(existing.portfolio_data)
+            form = PortfolioDataForm(initial=initial_data)
+        except Portfolio.DoesNotExist:
+            form = PortfolioDataForm()
     
     return render(request, 'portfolio/create.html', {'form': form})
+
+@login_required
+def new_portfolio(request):
+    """Start a fresh portfolio (clears existing data) and go to create form."""
+    try:
+        portfolio = Portfolio.objects.get(user=request.user)
+        portfolio.delete()
+    except Portfolio.DoesNotExist:
+        pass
+    messages.info(request, 'Starting a new portfolio.')
+    return redirect('create_portfolio')
 
 @login_required
 def select_template(request):

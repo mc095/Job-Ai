@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ portfolio.personalInfo.name }} | Developer Portfolio</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #F5F3F0; /* Off-white background */
+            color: #1a1a1a; /* Dark text */
+            font-family: 'Inter', sans-serif;
+            cursor: none; /* Hide the default cursor */
+        }
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Custom cursor styles */
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #1a1a1a;
+            border-radius: 50%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.15s ease-out;
+        }
+
+        /* Project link underline effect */
+        .project-link {
+            position: relative;
+            display: inline-block;
+        }
+        .project-link::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            transform: scaleX(0);
+            height: 1px;
+            bottom: -4px;
+            left: 0;
+            background-color: #1a1a1a;
+            transform-origin: bottom right;
+            transition: transform 0.3s ease-out;
+        }
+        .project-link:hover::after {
+            transform: scaleX(1);
+            transform-origin: bottom left;
+        }
+        
+        /* Project hover image */
+        .project-image-container {
+            position: relative;
+            z-index: 1; /* Keep text above the hover image */
+        }
+        .hover-image {
+            position: fixed; /* Use fixed to overlay on everything */
+            z-index: -1; /* Position it behind the text */
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            transform: translate(-50%, -50%) scale(0.8); /* Center and scale down */
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        /* Marquee styles */
+        .marquee {
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .marquee-content {
+            display: inline-block;
+            animation: marquee 30s linear infinite;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-100%); }
+        }
+    </style>
+</head>
+<body class="antialiased leading-relaxed">
+
+    <div class="cursor-dot"></div>
+
+    <header class="fixed top-0 left-0 right-0 z-50 mix-blend-difference">
+         <div class="container mx-auto px-6 md:px-12 py-6 flex justify-between items-center text-sm font-medium text-white">
+             <div class="font-serif text-lg">{{ portfolio.personalInfo.name }}</div>
+             <div>{{ portfolio.personalInfo.contact.location|default:"" }}</div>
+         </div>
+    </header>
+
+    <main class="container mx-auto px-6 md:px-12 pt-32">
+
+        <section class="min-h-[60vh] flex items-center" id="hero">
+            <h1 class="text-5xl md:text-7xl lg:text-8xl font-bold leading-tight">
+                I'm a {{ portfolio.personalInfo.jobTitles|default:"developer" }} 
+            </h1>
+        </section>
+
+        <section class="py-24" id="intro">
+             <div class="max-w-4xl">
+                 <p class="text-xl md:text-2xl leading-relaxed">
+                     {{ portfolio.personalInfo.bio }}
+                 </p>
+             </div>
+        </section>
+
+        <section class="py-12" id="work">
+            <h2 class="font-serif text-xl mb-12">Selected Work (2020-2024)</h2>
+
+            <div class="border-t border-gray-400">
+                {% for project in portfolio.projects %}
+                <a href="{{ project.links.live|default:'#' }}" class="project-link-wrapper block" target="_blank">
+                    <div class="project-item flex justify-between items-center py-8 border-b border-gray-400">
+                        <div class="project-image-container">
+                            <h3 class="text-3xl md:text-5xl font-serif font-bold">
+                                <span class="project-link">{{ project.title }}</span>
+                            </h3>
+                            <p class="text-lg md:text-xl text-gray-600 mt-2">{{ project.shortDescription }}</p>
+                        </div>
+                        <div class="text-lg md:text-xl font-medium hidden md:block"></div>
+                        <img src="{{ project.image|default:'https://placehold.co/640x480?text=Project' }}" class="hover-image w-80 h-96 object-cover" alt="{{ project.title }}">
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="py-24" id="more-work">
+             <div class="marquee border-y border-gray-400 py-6">
+                 <div class="marquee-content text-3xl font-serif">
+                     {% for skill in portfolio.skills %}
+                         <span class="mx-6">{{ skill }}</span>{% if not forloop.last %} &bull;{% endif %}
+                     {% endfor %}
+                 </div>
+             </div>
+        </section>
+
+        <section class="py-12" id="about">
+            <div class="grid md:grid-cols-2 gap-12 items-start">
+                <div>
+                    <h2 class="font-serif text-xl mb-4">About Me</h2>
+                    <p class="text-lg leading-relaxed text-gray-700">{{ portfolio.personalInfo.bio }}</p>
+                    <div class="mt-6">
+                        <a href="{{ portfolio.personalInfo.resumeUrl|default:'/portfolio/download/' }}" class="inline-block px-6 py-3 rounded-lg bg-black text-white hover:opacity-80 transition" {% if portfolio.personalInfo.resumeUrl %}target="_blank"{% endif %}>Download Resume</a>
+                    </div>
+                </div>
+                 <div>
+                    <h2 class="font-serif text-xl mb-4">Contact</h2>
+                    <img src="{{ portfolio.personalInfo.profileImageLarge }}" alt="Profile" class="w-48 h-48 object-cover rounded-full mb-4">
+                    <ul class="text-lg">
+                        <li><a href="mailto:{{ portfolio.personalInfo.contact.email }}" class="project-link">Email</a></li>
+                        {% for social in portfolio.personalInfo.socials %}
+                            <li><a href="{{ social.url }}" target="_blank" class="project-link">{{ social.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-12" id="experience">
+            <h2 class="font-serif text-xl mb-12 border-b border-gray-400 pb-4">Experience</h2>
+            <div class="space-y-12">
+                {% for e in portfolio.experience %}
+                <div class="grid md:grid-cols-4 gap-8">
+                    <div class="md:col-span-1">
+                        <p class="text-gray-600">{{ e.duration }}</p>
+                    </div>
+                    <div class="md:col-span-3">
+                        <h3 class="text-2xl font-bold">{{ e.role }}</h3>
+                        <p class="text-xl text-gray-800">{{ e.company }}</p>
+                        <p class="text-gray-600 mt-2 text-base leading-relaxed">{{ e.description }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="py-12 grid md:grid-cols-2 gap-12">
+            <div id="skills">
+                <h2 class="font-serif text-xl mb-12 border-b border-gray-400 pb-4">Skills</h2>
+                <div class="flex flex-wrap gap-2">
+                    {% for s in portfolio.skills %}
+                        <span class="px-3 py-1 rounded-full bg-gray-200 text-gray-800 text-sm">{{ s }}</span>
+                    {% empty %}
+                        <span class="text-gray-500 text-sm">No skills provided.</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div>
+                <div id="education" class="mb-12">
+                    <h2 class="font-serif text-xl mb-12 border-b border-gray-400 pb-4">Education</h2>
+                    <div class="space-y-8">
+                        {% for ed in portfolio.education %}
+                        <div class="grid grid-cols-4 gap-4">
+                            <div class="col-span-1">
+                                <p class="text-gray-600">{{ ed.year }}</p>
+                            </div>
+                            <div class="col-span-3">
+                                <h3 class="text-xl font-semibold">{{ ed.institution }}</h3>
+                                <p class="text-gray-700">{{ ed.degree }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div id="certifications">
+                    <h2 class="font-serif text-xl mb-12 border-b border-gray-400 pb-4">Certifications</h2>
+                    <div class="space-y-6">
+                        {% for c in portfolio.certifications %}
+                        <div class="grid grid-cols-4 gap-4">
+                            <div class="col-span-1">
+                                <p class="text-gray-600">{{ c.year }}</p>
+                            </div>
+                            <div class="col-span-3">
+                                <h3 class="font-semibold">{{ c.name }}</h3>
+                                <p class="text-gray-700">{{ c.issuer }}</p>
+                            </div>
+                        </div>
+                        {% empty %}
+                            <p class="text-gray-500">No certifications provided.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+    </main>
+
+    <footer class="text-center py-12 mt-12 border-t border-gray-300">
+        <p class="text-gray-500">&copy; {{ now|date:"Y" }} {{ portfolio.personalInfo.name }}. All Rights Reserved.</p>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- CUSTOM CURSOR ---
+            const cursorDot = document.querySelector('.cursor-dot');
+            window.addEventListener('mousemove', (e) => {
+                gsap.to(cursorDot, {
+                    duration: 0.3,
+                    x: e.clientX,
+                    y: e.clientY,
+                    ease: 'power2.out'
+                });
+            });
+
+            // --- PROJECT HOVER IMAGE EFFECT ---
+            const projectLinks = document.querySelectorAll('.project-link-wrapper');
+
+            projectLinks.forEach(link => {
+                const hoverImage = link.querySelector('.hover-image');
+                
+                link.addEventListener('mouseenter', (e) => {
+                    gsap.to(hoverImage, { opacity: 1, scale: 1, duration: 0.3 });
+                });
+                
+                link.addEventListener('mouseleave', (e) => {
+                    gsap.to(hoverImage, { opacity: 0, scale: 0.8, duration: 0.3 });
+                });
+
+                link.addEventListener('mousemove', (e) => {
+                    gsap.to(hoverImage, {
+                        x: e.clientX,
+                        y: e.clientY,
+                        duration: 0.5,
+                        ease: 'power3.out'
+                    });
+                });
+            });
+
+            // --- GSAP SCROLL-TRIGGERED ANIMATIONS ---
+            gsap.registerPlugin(ScrollTrigger);
+
+            gsap.from("#hero h1", {
+                opacity: 0,
+                y: 30,
+                duration: 1,
+                delay: 0.3,
+                ease: 'power3.out'
+            });
+
+            const animateUp = (element) => {
+                 gsap.from(element, {
+                     scrollTrigger: {
+                         trigger: element,
+                         start: "top 85%",
+                         toggleActions: "play none none none"
+                     },
+                     opacity: 0,
+                     y: 40,
+                     duration: 0.8,
+                     ease: 'power2.out',
+                     stagger: 0.2
+                 });
+            };
+
+            animateUp("#intro p");
+            document.querySelectorAll(".project-item").forEach(item => animateUp(item));
+            animateUp("#about > div");
+            animateUp("#experience > div > div"); // Animate each experience entry
+            animateUp("#skills > div > div"); // Animate each skill category
+            animateUp("#education > div > div"); // Animate education entries
+            animateUp("#certifications > div > div"); // Animate certification entries
+
+        });
+    </script>
+</body>
+</html>

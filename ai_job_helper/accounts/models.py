@@ -22,9 +22,14 @@ class UserProfile(models.Model):
 
 @receiver(post_save, sender=User)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)  # create profile
-    else:
-        # Only update if profile exists
-        if hasattr(instance, "userprofile"):
-            instance.userprofile.save()
+    try:
+        if created:
+            # Best-effort: do not block auth user creation if profile fails
+            UserProfile.objects.create(user=instance)
+        else:
+            # Only update if profile exists
+            if hasattr(instance, "userprofile"):
+                instance.userprofile.save()
+    except Exception as exc:
+        # Swallow errors to avoid blocking user creation
+        pass

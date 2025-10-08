@@ -21,22 +21,22 @@ class Portfolio(models.Model):
 # Portfolio templates available
 PORTFOLIO_TEMPLATES = [
     {
-        'id': 'creative',
-        'name': 'Creative Portfolio',
-        'description': 'Modern, colorful design with animations',
-        'preview': '/static/portfolio/previews/creative.jpg'
+        'id': 'template1',
+        'name': 'Elegant Light',
+        'description': 'Light, elegant design with subtle animations',
+        'preview': '/static/portfolio/previews/template1.jpg'
     },
     {
-        'id': 'minimal',
-        'name': 'Minimal Portfolio',
-        'description': 'Clean, simple design focused on content',
-        'preview': '/static/portfolio/previews/minimal.jpg'
+        'id': 'template2',
+        'name': 'Interactive Dark',
+        'description': 'Immersive dark theme with interactive effects',
+        'preview': '/static/portfolio/previews/template2.jpg'
     },
     {
-        'id': 'professional',
-        'name': 'Professional Portfolio',
-        'description': 'Corporate-style design for business professionals',
-        'preview': '/static/portfolio/previews/professional.jpg'
+        'id': 'template3',
+        'name': 'Professional Clean',
+        'description': 'Business-ready, clean layout focusing on clarity',
+        'preview': '/static/portfolio/previews/template3.jpg'
     }
 ]
 

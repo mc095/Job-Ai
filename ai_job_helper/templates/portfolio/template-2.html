@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en" style="scroll-behavior: smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {{ portfolio.personalInfo.name }} | Creative Developer Portfolio
+    </title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --bg-dark: #0a0a0a;
+        --text-light: #eaeaea;
+        --text-muted: #a0a0a0;
+        --accent: #bfa181; /* A sophisticated, muted gold */
+      }
+      body {
+        background-color: var(--bg-dark);
+        color: var(--text-light);
+        font-family: "Inter", sans-serif;
+        cursor: none;
+        overflow-x: hidden;
+      }
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: "Playfair Display", serif;
+      }
+
+      /* --- CUSTOM SCROLLBAR --- */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg-dark);
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+
+      /* --- ENHANCED CURSOR --- */
+      .cursor-circle {
+        width: 30px;
+        height: 30px;
+        border: 1px solid var(--text-light);
+        border-radius: 50%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 9999;
+        transform: translate(-50%, -50%);
+        transition: transform 0.2s ease-out, background-color 0.3s ease,
+          border-color 0.3s ease, width 0.3s ease, height 0.3s ease;
+        mix-blend-mode: difference;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .cursor-text {
+        opacity: 0;
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--bg-dark);
+        transition: opacity 0.3s ease;
+      }
+
+      /* --- MAGNETIC & REVEAL ANIMATIONS (Unchanged) --- */
+      .magnetic-link {
+        transition: transform 0.3s ease;
+        display: inline-block;
+      }
+      .reveal-text-container {
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+      }
+      .reveal-text-word {
+        display: inline-block;
+        transform: translateY(110%);
+      }
+
+      /* --- HORIZONTAL SCROLL SECTION --- */
+      .horizontal-scroll-section {
+        height: 100vh;
+        overflow: hidden;
+        position: relative;
+      }
+      .projects-container {
+        width: 400%;
+        height: 100%;
+        display: flex;
+        will-change: transform;
+      }
+      .project-panel {
+        width: 100vw;
+        height: 100%;
+        padding: 0 8vw;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      .project-content-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 1200px;
+        aspect-ratio: 16/9;
+        overflow: hidden;
+        border-radius: 1rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      }
+      .project-panel:hover .project-content-wrapper {
+        transform: scale(0.98);
+      }
+      .project-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform-origin: center;
+        transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      }
+      .project-panel:hover .project-image {
+        transform: scale(1.05);
+      }
+      .project-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 4rem 2rem 2rem;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+        text-align: left;
+      }
+      .after-scroll-section {
+        position: relative;
+        z-index: 10;
+        background-color: var(--bg-dark);
+      }
+    </style>
+  </head>
+  <body class="antialiased text-base md:text-lg leading-relaxed md:leading-8">
+    <header
+      class="fixed top-0 left-0 right-0 z-50 bg-[#0A0A0A]/80 backdrop-blur-md border-b border-white/5"
+    >
+      <div
+        class="container mx-auto px-6 md:px-12 py-5 flex justify-between items-center"
+      >
+        <div
+          id="logo"
+          class="magnetic-link text-xl font-semibold tracking-wider font-sans"
+        >
+          {{ portfolio.personalInfo.name }}
+        </div>
+        <nav
+          class="hidden md:flex space-x-10 text-sm font-medium text-gray-300"
+          id="nav-links"
+        >
+          <a
+            href="#work"
+            class="magnetic-link hover:text-white transition-colors duration-300"
+            >Work</a
+          >
+          <a
+            href="#about"
+            class="magnetic-link hover:text-white transition-colors duration-300"
+            >About</a
+          >
+          <a
+            href="#contact"
+            class="magnetic-link hover:text-white transition-colors duration-300"
+            >Contact</a
+          >
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section
+        class="h-screen w-full flex flex-col items-center justify-center text-center px-6"
+        id="hero"
+      >
+        <div class="max-w-5xl">
+          <h2 class="text-xl md:text-2xl font-light text-gray-400 mb-4">
+            {{ portfolio.personalInfo.jobTitles }}
+          </h2>
+          <h1
+            class="text-5xl md:text-7xl lg:text-8xl font-bold leading-tight hero-text"
+          >
+            {{ portfolio.personalInfo.bio|safe }}
+          </h1>
+        </div>
+        <div
+          class="absolute bottom-10 left-1/2 -translate-x-1/2 text-xs font-medium text-gray-400 animate-pulse"
+        >
+          SCROLL DOWN
+        </div>
+      </section>
+
+      <section class="horizontal-scroll-section" id="work">
+        <div class="projects-container">
+          {% for project in portfolio.projects %}
+          <div class="project-panel interactive-project">
+            <a
+              href="{{ project.links.live|default:'#' }}"
+              target="_blank"
+              class="block w-full text-center"
+            >
+              <div class="project-content-wrapper">
+                <img
+                  src="{{ project.image|default:'https://images.unsplash.com/photo-1522199755839-a2bacb67c546?&auto=format&fit=crop&w=1200&q=80' }}"
+                  alt="{{ project.title }}"
+                  class="project-image"
+                />
+                <div class="project-overlay">
+                  <h3 class="text-3xl md:text-4xl font-bold">
+                    {{ project.title }}
+                  </h3>
+                  <p class="text-gray-300 text-base mt-2 max-w-2xl">
+                    {{ project.shortDescription }}
+                  </p>
+                </div>
+              </div>
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section
+        class="after-scroll-section container mx-auto px-6 md:px-12 py-32 md:py-48"
+        id="about"
+      >
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-12 items-center">
+          <div class="md:col-span-1">
+            <img
+              src="{{ portfolio.personalInfo.profileImageLarge|default:'https://i.pravatar.cc/300' }}"
+              alt="Profile"
+              class="w-48 h-48 md:w-full md:h-auto rounded-full md:rounded-2xl object-cover mx-auto"
+            />
+          </div>
+          <div class="md:col-span-2 text-center md:text-left">
+            <h2 class="text-4xl md:text-5xl font-bold mb-6 reveal-text">
+              About Me
+            </h2>
+            <p class="text-xl leading-relaxed text-gray-300 reveal-text-body">
+              {{ portfolio.personalInfo.bio }} Passionate about clean code,
+              performance optimization, and learning new technologies to solve
+              complex problems.
+            </p>
+            <div class="mt-10">
+              <a
+                href="{{ portfolio.personalInfo.resumeUrl|default:'/portfolio/download/' }}"
+                class="inline-block px-8 py-3 border-2 border-[var(--accent)] text-[var(--accent)] rounded-full font-semibold hover:bg-[var(--accent)] hover:text-black transition-all duration-300"
+                {%
+                if
+                portfolio.personalInfo.resumeUrl
+                %}target="_blank"
+                {%
+                endif
+                %}
+              >
+                Download Resume
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="after-scroll-section bg-black/20 py-32 md:py-40">
+        <div class="container mx-auto px-6 md:px-12">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24">
+            <div>
+              <h2 class="text-3xl md:text-4xl font-bold mb-10">Experience</h2>
+              <div class="space-y-8">
+                {% for e in portfolio.experience %}
+                <div
+                  class="border-l-2 border-[var(--accent)] pl-6 hover:bg-white/5 transition-colors duration-300 py-2"
+                >
+                  <h3 class="text-xl font-semibold">{{ e.role }}</h3>
+                  <p class="text-[var(--text-muted)] text-sm mb-2">
+                    {{ e.company }} • {{ e.duration }}
+                  </p>
+                  <p class="text-gray-300 text-base">{{ e.description }}</p>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            <div>
+              <h2 class="text-3xl md:text-4xl font-bold mb-10">Education</h2>
+              <div class="space-y-8">
+                {% for ed in portfolio.education %}
+                <div
+                  class="border-l-2 border-[var(--accent)] pl-6 hover:bg-white/5 transition-colors duration-300 py-2"
+                >
+                  <h3 class="text-xl font-semibold">{{ ed.institution }}</h3>
+                  <p class="text-[var(--text-muted)] text-sm">
+                    {{ ed.degree }} • {{ ed.year }}
+                  </p>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="after-scroll-section container mx-auto px-6 md:px-12 py-32 md:py-40 text-center"
+        id="skills"
+      >
+        <h2 class="text-4xl md:text-5xl font-bold mb-16">
+          My Tech Stack
+        </h2>
+        <div class="max-w-5xl mx-auto">
+          <div class="flex flex-wrap gap-3 justify-center">
+            {% for s in portfolio.skills %}
+            <span
+              class="px-4 py-2 rounded-lg bg-white/5 text-gray-200 text-sm font-medium"
+              >{{ s }}</span
+            >
+            {% empty %}
+            <span class="text-gray-400">No skills provided.</span>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="after-scroll-section bg-black/20" id="contact">
+      <div class="container mx-auto px-6 md:px-12 py-24 text-center">
+        <h2 class="text-5xl md:text-7xl font-bold mb-4">
+          Have a project?
+        </h2>
+        <p class="text-gray-400 mb-8">
+          I'd love to hear from you. Let's build something great together.
+        </p>
+        <a
+          href="mailto:{{ portfolio.personalInfo.contact.email }}"
+          class="inline-block text-2xl md:text-4xl text-gray-200 hover:text-[var(--accent)] transition-colors duration-300 magnetic-link font-medium"
+        >
+          {{ portfolio.personalInfo.contact.email }}
+        </a>
+        <div
+          class="flex justify-center space-x-8 mt-16 text-sm font-medium text-gray-400"
+        >
+          {% for social in portfolio.personalInfo.socials %}
+          <a
+            href="{{ social.url }}"
+            target="_blank"
+            class="magnetic-link hover:text-white transition-colors duration-300"
+            >{{ social.name }}</a
+          >
+          {% endfor %}
+        </div>
+      </div>
+      <div class="text-center py-6 border-t border-white/5">
+        <p class="text-xs text-gray-500">
+          &copy; 2024 {{ portfolio.personalInfo.name }}. All Rights Reserved.
+        </p>
+      </div>
+    </footer>
+
+    <div class="cursor-circle"><span class="cursor-text">View</span></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        gsap.registerPlugin(ScrollTrigger);
+
+        // --- ENHANCED CURSOR ---
+        const cursorCircle = document.querySelector(".cursor-circle");
+        const cursorText = document.querySelector(".cursor-text");
+        const moveCursor = (e) => {
+          gsap.to(cursorCircle, {
+            duration: 0.3,
+            x: e.clientX,
+            y: e.clientY,
+            ease: "power2.out",
+          });
+        };
+        window.addEventListener("mousemove", moveCursor);
+
+        document.querySelectorAll(".interactive-project").forEach((el) => {
+          el.addEventListener("mouseenter", () => {
+            gsap.to(cursorCircle, {
+              width: 90,
+              height: 90,
+              backgroundColor: "var(--text-light)",
+              borderColor: "transparent",
+            });
+            gsap.to(cursorText, { opacity: 1 });
+          });
+          el.addEventListener("mouseleave", () => {
+            gsap.to(cursorCircle, {
+              width: 30,
+              height: 30,
+              backgroundColor: "transparent",
+              borderColor: "var(--text-light)",
+            });
+            gsap.to(cursorText, { opacity: 0 });
+          });
+        });
+
+        // --- MAGNETIC LINKS ---
+        document.querySelectorAll(".magnetic-link").forEach((link) => {
+          link.addEventListener("mousemove", (e) => {
+            const { left, top, width, height } = link.getBoundingClientRect();
+            const x = e.clientX - (left + width / 2);
+            const y = e.clientY - (top + height / 2);
+            gsap.to(link, {
+              x: x * 0.4,
+              y: y * 0.4,
+              duration: 0.8,
+              ease: "elastic.out(1, 0.5)",
+            });
+          });
+          link.addEventListener("mouseleave", () => {
+            gsap.to(link, { x: 0, y: 0, duration: 0.5, ease: "power3.out" });
+          });
+        });
+
+        // --- PAGE LOAD & HERO PARALLAX ---
+        gsap.from(".hero-text", {
+          opacity: 0,
+          y: 30,
+          duration: 1,
+          delay: 0.3,
+          ease: "power3.out",
+        });
+        gsap.from(["#logo", "#nav-links a"], {
+          opacity: 0,
+          y: -20,
+          stagger: 0.1,
+          duration: 1,
+          delay: 0.5,
+          ease: "power3.out",
+        });
+        gsap.to(".hero-text", {
+          y: -100,
+          ease: "power1.in",
+          scrollTrigger: {
+            trigger: "#hero",
+            start: "top top",
+            end: "bottom top",
+            scrub: 1.5,
+          },
+        });
+
+        // --- HORIZONTAL SCROLL ---
+        const horizontalSection = document.querySelector(
+          ".horizontal-scroll-section"
+        );
+        const projectsContainer = document.querySelector(".projects-container");
+        const numPanels = projectsContainer.children.length;
+        const scrollWidth = projectsContainer.offsetWidth - window.innerWidth;
+        gsap.to(projectsContainer, {
+          x: () => -scrollWidth,
+          ease: "none",
+          scrollTrigger: {
+            trigger: horizontalSection,
+            start: "top top",
+            pin: true,
+            scrub: 1,
+            end: () => "+=" + projectsContainer.offsetWidth,
+            invalidateOnRefresh: true,
+          },
+        });
+
+        // --- WORD REVEAL ON SCROLL ---
+        // --- WORD REVEAL ON SCROLL (Corrected) ---
+        document.querySelectorAll(".reveal-text").forEach((elem) => {
+          const words = elem.textContent.split(" ");
+          // Clear the original text before adding the new structure
+          elem.innerHTML = "";
+
+          const container = document.createElement("div");
+          container.className = "reveal-text-container";
+
+          words.forEach((word, index) => {
+            // Create the wrapper for the animation
+            const wordWrapper = document.createElement("div");
+            wordWrapper.className = "overflow-hidden inline-block";
+
+            // Create the element that holds the word itself
+            const wordElement = document.createElement("div");
+            wordElement.className = "reveal-text-word";
+            wordElement.textContent = word;
+
+            wordWrapper.appendChild(wordElement);
+            container.appendChild(wordWrapper);
+
+            // Add a space after each word except the last one
+            if (index < words.length - 1) {
+              container.insertAdjacentHTML("beforeend", "&nbsp;");
+            }
+          });
+
+          elem.appendChild(container);
+
+          // Animate the new elements
+          gsap.from(elem.querySelectorAll(".reveal-text-word"), {
+            yPercent: 110,
+            stagger: 0.05,
+            duration: 0.8,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: elem,
+              start: "top 85%",
+            },
+          });
+        });
+
+        // --- SIMPLE FADE IN FOR BODY TEXT ---
+        gsap.from(".reveal-text-body", {
+          opacity: 0,
+          y: 30,
+          duration: 1,
+          ease: "power3.out",
+          scrollTrigger: { trigger: ".reveal-text-body", start: "top 90%" },
+        });
+      });
+    </script>
+  </body>
+</html>

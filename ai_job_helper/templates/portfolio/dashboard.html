@@ -86,7 +86,7 @@
                 <div class="mb-8">
                     <h3 class="text-lg font-semibold text-gray-800 mb-4">Template Features</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {% if portfolio.selected_template == 'creative' %}
+                        {% if portfolio.selected_template == 'template1' %}
                             <div class="flex items-center space-x-3 p-3 bg-pink-50 rounded-lg">
                                 <i class="fas fa-palette text-pink-500"></i>
                                 <span class="text-sm text-gray-700">Animated gradient backgrounds</span>
@@ -103,35 +103,27 @@
                                 <i class="fas fa-keyboard text-pink-500"></i>
                                 <span class="text-sm text-gray-700">Typing animation effects</span>
                             </div>
-                        {% elif portfolio.selected_template == 'minimal' %}
+                        {% elif portfolio.selected_template == 'template2' %}
                             <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                                <i class="fas fa-minimize text-gray-500"></i>
-                                <span class="text-sm text-gray-700">Clean, simple design</span>
+                                <i class="fas fa-moon text-gray-500"></i>
+                                <span class="text-sm text-gray-700">Interactive dark motion</span>
                             </div>
                             <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                                <i class="fas fa-book-open text-gray-500"></i>
-                                <span class="text-sm text-gray-700">Content-focused layout</span>
+                                <i class="fas fa-magnet text-gray-500"></i>
+                                <span class="text-sm text-gray-700">Magnetic links and cursor</span>
                             </div>
                             <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                                <i class="fas fa-tachometer-alt text-gray-500"></i>
-                                <span class="text-sm text-gray-700">Fast loading performance</span>
+                                <i class="fas fa-arrows-alt-h text-gray-500"></i>
+                                <span class="text-sm text-gray-700">Horizontal scroll projects</span>
                             </div>
-                            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                                <i class="fas fa-mobile-alt text-gray-500"></i>
-                                <span class="text-sm text-gray-700">Mobile-first responsive</span>
-                            </div>
-                        {% else %}
+                        {% elif portfolio.selected_template == 'template3' %}
                             <div class="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
                                 <i class="fas fa-briefcase text-blue-500"></i>
-                                <span class="text-sm text-gray-700">Professional corporate layout</span>
+                                <span class="text-sm text-gray-700">Professional, clean layout</span>
                             </div>
                             <div class="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                                <i class="fas fa-chart-line text-blue-500"></i>
-                                <span class="text-sm text-gray-700">Business-focused styling</span>
-                            </div>
-                            <div class="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                                <i class="fas fa-font text-blue-500"></i>
-                                <span class="text-sm text-gray-700">Clean typography hierarchy</span>
+                                <i class="fas fa-columns text-blue-500"></i>
+                                <span class="text-sm text-gray-700">Clear information hierarchy</span>
                             </div>
                             <div class="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
                                 <i class="fas fa-print text-blue-500"></i>
@@ -220,7 +212,7 @@
                 <i class="fas fa-palette mr-2"></i>
                 Change Template
             </a>
-            <a href="{% url 'portfolio_home' %}" 
+            <a href="{% url 'new_portfolio' %}" 
                class="inline-flex items-center justify-center px-8 py-4 bg-accent-500 hover:bg-accent-600 text-white font-semibold rounded-xl transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-lg">
                 <i class="fas fa-plus mr-2"></i>
                 Create New Portfolio

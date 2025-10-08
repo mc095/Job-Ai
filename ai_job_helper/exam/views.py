@@ -58,16 +58,112 @@ def exam_loading(request):
 
         # Use AI service to generate personalized, non-repeating questions
         ai_service = AIService()
+        # Build a uniqueness token to encourage different generations
+        from datetime import datetime
+        uniqueness_token = f"{request.user.id}-{datetime.utcnow().timestamp()}"
+        # Nudge the model for diversity without changing the signature
+        user_context['uniqueness_token'] = uniqueness_token
         questions_data = ai_service.generate_exam_questions_for_user(
             user_context=user_context,
             avoidance_list=recent_qs,
             job_role=job_role,
-            num_questions=10,
-            difficulty="mixed",
+            num_questions=30,
+            difficulty="medium",
         )
         
         if not questions_data or 'questions' not in questions_data:
             return render(request, "exam/error.html", {"message": "Failed to generate exam questions"})
+
+        # --- Sanitize and enforce option diversity/quality ---
+        import difflib
+
+        def is_generic(text: str) -> bool:
+            if not isinstance(text, str):
+                return True
+            t = text.strip().lower()
+            return (t == '' or
+                    'all of the above' in t or
+                    'none of the above' in t or
+                    t in {'all', 'none', 'both', 'neither'})
+
+        def options_are_diverse(opts):
+            norm = [strip_label(o or '').lower() for o in opts]
+            # Unique and non-empty
+            if len(set(norm)) < len(norm):
+                return False
+            if any(len(o) < 2 for o in norm):
+                return False
+            # Avoid highly similar options
+            for i in range(len(norm)):
+                for j in range(i+1, len(norm)):
+                    if difflib.SequenceMatcher(a=norm[i], b=norm[j]).ratio() > 0.85:
+                        return False
+            return True
+
+        needed = 30
+        attempts = 0
+        max_attempts = 3
+        accumulated = []
+
+        def extract_good_questions(payload):
+            out = []
+            for q in payload.get('questions', []):
+                qtext = q.get('question', '')
+                if is_generic(qtext):
+                    continue
+                opts = (q.get('options') or q.get('choices') or q.get('answers') or [])
+                if not isinstance(opts, list):
+                    continue
+                # Ensure 4 options
+                while len(opts) < 4:
+                    opts.append('')
+                opts = [strip_label(x or '') for x in opts[:4]]
+                if any(is_generic(o) for o in opts):
+                    continue
+                if not options_are_diverse(opts):
+                    continue
+                # Valid correct answer mapping
+                correct_letter = normalize_correct_letter(opts, q.get('correct_answer'))
+                if correct_letter not in {'A','B','C','D'}:
+                    continue
+                out.append({
+                    'question': qtext,
+                    'options': opts,
+                    'correct_letter': correct_letter,
+                    'explanation': q.get('explanation', ''),
+                    'topic': q.get('topic') or None
+                })
+            return out
+
+        # First batch
+        accumulated.extend(extract_good_questions(questions_data))
+
+        # If not enough, fetch more with updated avoidance
+        while len(accumulated) < needed and attempts < max_attempts:
+            attempts += 1
+            more_avoid = recent_qs + [q['question'] for q in accumulated]
+            more = ai_service.generate_exam_questions_for_user(
+                user_context=user_context,
+                avoidance_list=more_avoid,
+                job_role=job_role,
+                num_questions=needed - len(accumulated),
+                difficulty="medium",
+            )
+            if not more or 'questions' not in more:
+                break
+            accumulated.extend(extract_good_questions(more))
+            # Deduplicate by question text
+            seen = set()
+            dedup = []
+            for q in accumulated:
+                if q['question'] in seen:
+                    continue
+                seen.add(q['question'])
+                dedup.append(q)
+            accumulated = dedup
+            
+        if not accumulated:
+            return render(request, "exam/error.html", {"message": "Could not generate high-quality unique questions. Please try again."})
 
         # Create the exam and questions in the database.
         exam = Exam.objects.create(
@@ -78,19 +174,65 @@ def exam_loading(request):
         # Store exam ID in session for navigation
         request.session['current_exam_id'] = str(exam._id)
 
-        for question_data in questions_data['questions']:
+        # Also avoid recent global questions for this role to reduce cross-user repetition
+        from .models import Question as QGlobal
+        global_recent = set(list(QGlobal.objects.filter(exam__job_role=job_role)
+                                 .order_by('-_id').values_list('text', flat=True)[:200]))
+
+        import re
+
+        def strip_label(text: str) -> str:
+            if not isinstance(text, str):
+                return ''
+            # Remove leading labels like "A.", "(A)", "A)" and extra spaces
+            return re.sub(r"^[\s\(\[]?[A-Da-d][\)\].:\-\s]+\s*", "", text).strip()
+
+        def normalize_correct_letter(options_list, correct_value):
+            letters = ['A', 'B', 'C', 'D']
+            # If already a proper letter
+            if isinstance(correct_value, str):
+                cv = correct_value.strip().upper()
+                if cv in letters:
+                    return cv
+            # If numeric index
+            try:
+                idx = int(correct_value)
+                if 0 <= idx < len(options_list):
+                    return letters[idx]
+            except Exception:
+                pass
+            # Match by option text
+            if isinstance(correct_value, str):
+                target = strip_label(correct_value).lower()
+                for i, opt in enumerate(options_list):
+                    if target == strip_label(opt or '').lower():
+                        return letters[i]
+            # Default
+            return 'A'
+
+        saved = 0
+        for question_data in accumulated[:needed]:
+            # Skip globally recent duplicates
+            if question_data.get('question') in global_recent:
+                continue
             topic = question_data.get("topic") or None
+            options = question_data.get("options") or []
+            correct_letter = question_data.get("correct_letter")
             question = Question.objects.create(
                 exam=exam,
                 text=question_data["question"],
-                option_a=question_data["options"][0] if len(question_data["options"]) > 0 else "",
-                option_b=question_data["options"][1] if len(question_data["options"]) > 1 else "",
-                option_c=question_data["options"][2] if len(question_data["options"]) > 2 else "",
-                option_d=question_data["options"][3] if len(question_data["options"]) > 3 else "",
-                correct_option=question_data["correct_answer"],
+                option_a=options[0],
+                option_b=options[1],
+                option_c=options[2],
+                option_d=options[3],
+                correct_option=correct_letter,
                 explanation=question_data.get("explanation", ""),
                 topic=topic
             )
+            saved += 1
+
+        if saved == 0:
+            return render(request, "exam/error.html", {"message": "No unique questions could be generated. Please try again."})
 
         # Redirect to the first question.
         return redirect("exam_test", exam_id=str(exam._id), question_num=1)
@@ -241,6 +383,6 @@ def start_exam(request, exam_id):
     try:
         exam = get_object_or_404(Exam, _id=ObjectId(exam_id), user=request.user)
         request.session['current_exam_id'] = str(exam._id)
-        return redirect("exam_test", question_num=1)
+        return redirect("exam_test", exam_id=str(exam._id), question_num=1)
     except Exception as e:
         return render(request, "exam/error.html", {"message": f"Error starting exam: {str(e)}"})

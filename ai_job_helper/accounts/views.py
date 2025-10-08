@@ -3,6 +3,7 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib import messages
 from .forms import SignUpForm, UserProfileForm
 from .models import UserProfile
 
@@ -74,10 +75,12 @@ def signup(request):
         form = SignUpForm(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Account created successfully. Please sign in.')
             return redirect('login')
+        messages.error(request, 'Please correct the errors below and try again.')
     else:
         form = SignUpForm()
-    return render(request, 'registration/signup.html', {'form': form})
+    return render(request, 'registration/signup.html', {'form': form, 'hide_header': True})
 
 
 @login_required

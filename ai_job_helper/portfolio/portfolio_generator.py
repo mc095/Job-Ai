@@ -10,15 +10,28 @@ class PortfolioGenerator:
         self.ai_service = AIService()
     
     def generate_portfolio(self, portfolio_data, template_id):
-        """Generate portfolio HTML based on template"""
+        """Generate portfolio HTML based on selected template id"""
+        if template_id in ('template1', 'template2', 'template3'):
+            template_map = {
+                'template1': 'portfolio/template-1.html',
+                'template2': 'portfolio/template-2.html',
+                'template3': 'portfolio/template-3.html',
+            }
+            return render_to_string(template_map[template_id], {
+                'portfolio': portfolio_data,
+                'sample': True,
+            })
+        # Backward compatibility with previous ids
         if template_id == 'creative':
             return self._generate_creative_portfolio(portfolio_data)
         elif template_id == 'minimal':
             return self._generate_minimal_portfolio(portfolio_data)
         elif template_id == 'professional':
             return self._generate_professional_portfolio(portfolio_data)
-        else:
-            return self._generate_creative_portfolio(portfolio_data)  # Default
+        return render_to_string('portfolio/template-1.html', {
+            'portfolio': portfolio_data,
+            'sample': True,
+        })
     
     def _generate_creative_portfolio(self, data):
         """Generate the creative portfolio template (Angie's style) using AI"""
