@@ -4,7 +4,6 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import UserProfile
 from exam.models import Exam
 from analysis.models import AgentMemory
-from ai_agents.ai_service import AIService
 from analysis.models import AnalysisResult
 
 
@@ -35,23 +34,8 @@ class UserAdmin(BaseUserAdmin):
     actions = BaseUserAdmin.actions + ['reanalyze_resume'] if hasattr(BaseUserAdmin, 'actions') else ['reanalyze_resume']
 
     def reanalyze_resume(self, request, queryset):
-        created = 0
-        for user in queryset:
-            try:
-                profile = user.userprofile
-                text = profile.extracted_text or profile.resume_text or ''
-                if not text:
-                    continue
-                # Use Gemini (via agno) to analyze resume text against a generic role context
-                ai = AIService()
-                analysis = ai.analyze_resume(text, job_description="Generic Software/Tech Role") or {}
-                score = float(analysis.get('ats_score', 75))
-                feedback = analysis.get('overall_feedback') or analysis.get('suggestions') or 'AI re-analysis'
-                AnalysisResult.objects.create(user=user, score=round(score, 1), feedback=feedback)
-                created += 1
-            except Exception:
-                continue
-        self.message_user(request, f"Re-analyzed resume for {created} user(s).")
+        # Server-side re-analysis disabled (moved to client-side Puter.js flows)
+        self.message_user(request, "Server re-analysis disabled. Use ATS page with Puter.js.")
     reanalyze_resume.short_description = "Re-analyze Resume and update latest score"
 
     def get_actions(self, request):

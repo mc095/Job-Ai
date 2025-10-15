@@ -1,13 +1,21 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+import re
 from .forms import ATSForm
 from .models import ATSResult
 from .services import real_ats_analysis, baseline_overlap_score
-from ai_agents.ai_service import AIService
+from analysis.models import AgentMemory
 
 @login_required
 def home(request):
     context = {"result": None, "history": None, "form": ATSForm()}
+
+    # Expose resume_text for client-side scoring (Puter.js)
+    try:
+        resume_text_ctx = getattr(request.user.userprofile, "resume_text", "") or ""
+    except Exception:
+        resume_text_ctx = ""
+    context["resume_text"] = resume_text_ctx
 
     if request.method == "POST":
         form = ATSForm(request.POST)
@@ -18,6 +26,9 @@ def home(request):
             rewrite = form.cleaned_data["rewrite_resume"]
             resume_text = getattr(request.user.userprofile, "resume_text", "") or ""
 
+            # keep in context for template JS usage
+            context["resume_text"] = resume_text
+
             if not resume_text:
                 context["error"] = "No resume text found in your profile. Please paste your resume in Profile."
                 return render(request, "ats/home.html", context)
@@ -25,32 +36,38 @@ def home(request):
                 context["error"] = "Please paste a job description."
                 return render(request, "ats/home.html", context)
 
-            # 1) REAL ATS Analysis (not fake!)
+            # 1) REAL ATS Analysis (baseline)
             real_analysis = real_ats_analysis(resume_text, jd)
-            
-            # 2) Generate comprehensive detailed suggestions
-            try:
-                ai_service = AIService()
-                ai_result = ai_service.generate_ats_optimization(resume_text, jd)
-                
-                if ai_result and ai_result.get('ats_improvements'):
-                    # Use AI-generated detailed suggestions
-                    suggestions = generate_detailed_suggestions(real_analysis, ai_result)
-                    optimized_resume = ai_result.get('optimized_resume', '')
-                else:
-                    # Fallback to comprehensive real analysis suggestions
-                    suggestions = generate_comprehensive_suggestions(real_analysis)
-                    optimized_resume = ""
-            except Exception as e:
-                # Fallback to comprehensive real analysis suggestions
-                suggestions = generate_comprehensive_suggestions(real_analysis)
-                optimized_resume = ""
-            
-            # Use real ATS scores
-            final_score = real_analysis['final_score']
-            missing_keywords = ", ".join(real_analysis['missing_keywords'])
 
-            # 3) Persist result with real analysis data
+            # 2) If client-side Puter.js result provided, parse and use it
+            puter_raw = request.POST.get("puter_result", "").strip()
+            llm_score = None
+            parsed_missing = None
+            parsed_suggestions = None
+            parsed_optimized_resume = None
+            if puter_raw:
+                m = re.search(r"###\s*ATS\s*Score:\s*(\d{1,3})", puter_raw, flags=re.I)
+                if m:
+                    llm_score = max(0, min(100, int(m.group(1))))
+                m = re.search(r"###\s*Missing\s*Keywords:\s*(.+?)(?:\n###|\Z)", puter_raw, flags=re.I | re.S)
+                if m:
+                    parsed_missing = m.group(1).strip()
+                m = re.search(r"###\s*Suggestions:\s*(.+?)(?:\n###|\Z)", puter_raw, flags=re.I | re.S)
+                if m:
+                    parsed_suggestions = m.group(1).strip()
+                m = re.search(r"###\s*Optimized\s*Resume(?:\s*\(.*?\))?:\s*(.+)\Z", puter_raw, flags=re.I | re.S)
+                if m:
+                    parsed_optimized_resume = m.group(1).strip()
+
+            # 3) Build final values preferring Puter.js when present
+            final_score = llm_score if llm_score is not None else real_analysis['final_score']
+            missing_keywords = parsed_missing if parsed_missing is not None else ", ".join(real_analysis['missing_keywords'])
+            suggestions = parsed_suggestions if parsed_suggestions is not None else generate_comprehensive_suggestions(real_analysis)
+            optimized_resume = parsed_optimized_resume if parsed_optimized_resume is not None else ""
+
+            # 4) No Gemini/Groq enrichment; rely on Puter.js or comprehensive real analysis only
+
+            # 5) Persist result
             result = ATSResult.objects.create(
                 user=request.user,
                 job_description=jd,
@@ -62,6 +79,14 @@ def home(request):
             )
             context["result"] = result
             context["real_analysis"] = real_analysis  # Pass detailed analysis to template
+
+            # Update AgentMemory with last ATS score
+            try:
+                mem, _ = AgentMemory.objects.get_or_create(user=request.user)
+                mem.last_ats_score = final_score
+                mem.save()
+            except Exception:
+                pass
 
     # recent history
     context["history"] = ATSResult.objects.filter(user=request.user)[:10]

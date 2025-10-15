@@ -5,7 +5,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from .models import InterviewSession, InterviewMessage
-from ai_agents.ai_service import AIService
+from analysis.models import AgentMemory
+ 
 
 @login_required
 def interview_home(request):
@@ -56,6 +57,23 @@ def interview_chat(request, session_id):
     if request.method == "POST" and not session.completed:
         candidate_answer = request.POST.get("answer")
         InterviewMessage.objects.create(session=session, role="candidate", content=candidate_answer)
+        # Ensure session pointer in AgentMemory
+        try:
+            mem, _ = AgentMemory.objects.get_or_create(user=request.user)
+            sessions = mem.sessions or []
+            if not any(s.get('id') == str(session._id) for s in sessions):
+                sessions.append({
+                    'type': 'interview',
+                    'id': str(session._id),
+                    'started_at': str(session.created_at),
+                    'ended_at': None,
+                    'summary': '',
+                    'score': None,
+                })
+                mem.sessions = sessions
+                mem.save()
+        except Exception:
+            pass
 
         # Prepare conversation history
         history = [{"role": m.role, "content": m.content} for m in chat_messages]
@@ -83,38 +101,28 @@ def interview_chat(request, session_id):
 
         # Check if the interview is over or if a new question is needed
         if session.current_question >= session.total_questions:
-            # Generate and save final feedback using AI agent
-            ai_service = AIService()
-            feedback_data = ai_service.generate_interview_feedback(
-                resume_text=session.resume_text,
-                job_description=session.job_description,
-                history=history,
-            )
-            if isinstance(feedback_data, dict):
-                short_feedback = (feedback_data.get('feedback', '') or '').strip()
-                if len(short_feedback) > 320:
-                    short_feedback = short_feedback[:317] + '...'
-                feedback_msg = f"SCORE: {feedback_data.get('score', 0)}\nFEEDBACK: {short_feedback}"
-                InterviewMessage.objects.create(session=session, role="interviewer", content=feedback_msg)
-                session.performance_score = feedback_data.get('score', 0)
-                session.feedback_summary = feedback_data.get('feedback', '')
-                session.completed = True
-            else:
-                # Fallback behavior
-                InterviewMessage.objects.create(session=session, role="interviewer", content=str(feedback_data))
-                session.performance_score = 0
-                session.feedback_summary = str(feedback_data)
-                session.completed = True
+            # Finalize with deterministic summary (no server LLM)
+            summary = "Thank you for completing the interview. We'll review your answers and get back to you."
+            InterviewMessage.objects.create(session=session, role="interviewer", content=summary)
+            session.performance_score = 0
+            session.feedback_summary = summary
+            session.completed = True
+            # update AgentMemory session end
+            try:
+                mem = AgentMemory.objects.get(user=request.user)
+                sessions = mem.sessions or []
+                for s in sessions:
+                    if s.get('id') == str(session._id):
+                        s['ended_at'] = str(session.created_at)
+                        s['summary'] = summary
+                        s['score'] = session.performance_score
+                mem.sessions = sessions
+                mem.save()
+            except Exception:
+                pass
         else:
-            # Generate and save the next question using AI agent with context
-            ai_service = AIService()
-            next_q = ai_service.generate_next_interview_question(
-                resume_text=session.resume_text,
-                job_description=session.job_description,
-                history=history,
-                current_index=session.current_question,
-                total_questions=session.total_questions,
-            )
+            # Generate a simple placeholder question (client-side Puter.js should drive real flow)
+            next_q = f"Question {session.current_question + 1}: Please describe a recent challenge relevant to this role and how you solved it."
             if next_q and len(next_q) > 240:
                 next_q = next_q[:237] + '...'
             InterviewMessage.objects.create(session=session, role="interviewer", content=next_q)

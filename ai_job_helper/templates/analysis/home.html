@@ -337,6 +337,9 @@
     </div>
 </div>
 
+<!-- Puter.js for client-side GPT -->
+<script src="https://js.puter.com/v2/"></script>
+
 <!-- Custom JavaScript -->
 <script>
 function copyToClipboard(text) {
@@ -369,6 +372,7 @@ function downloadResume() {
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('analysisForm');
     const textarea = document.getElementById('job_description');
+    const resumeTextFromServer = `{{ resume_text|default:""|escapejs }}`;
     
     // Add focus effects
     textarea.addEventListener('focus', function() {
@@ -385,11 +389,37 @@ document.addEventListener('DOMContentLoaded', function() {
         this.style.height = this.scrollHeight + 'px';
     });
     
-    // Form submission with loading state
-    form.addEventListener('submit', function() {
+    // Form submission: run Puter.js first, then submit
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
         const submitBtn = this.querySelector('button[type="submit"]');
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Analyzing...';
+        const original = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Analyzing with AI...';
         submitBtn.disabled = true;
+
+        try {
+            const jd = textarea.value?.trim();
+            const resumeText = resumeTextFromServer?.trim();
+            if (resumeText && jd) {
+                const prompt = `You are an expert resume analyst. Compare the resume to the job description and return:\n\n### ATS Score:\n<0-100 integer>\n\n### Strengths:\n<3-6 bullets>\n\n### Weaknesses:\n<3-6 bullets>\n\n### Suggestions:\n<6-10 bullets>\n\n### Rewritten Summary:\n<a concise, truthful summary>\n\nResume:\n---\n${resumeText}\n---\n\nJob Description:\n---\n${jd}\n---`;
+                const result = await puter.ai.chat(prompt, { model: 'gpt-5-nano' });
+                let hidden = document.getElementById('puter_result_analysis');
+                if (!hidden) {
+                    hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'puter_result_analysis';
+                    hidden.id = 'puter_result_analysis';
+                    form.appendChild(hidden);
+                }
+                hidden.value = String(result || '');
+            }
+        } catch (err) {
+            console.warn('Puter.js analysis failed:', err);
+        } finally {
+            submitBtn.innerHTML = original;
+            submitBtn.disabled = false;
+            form.submit();
+        }
     });
 });
 </script>

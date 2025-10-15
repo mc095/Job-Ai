@@ -200,6 +200,8 @@
   </footer>
 
   <!-- JavaScript -->
+  <!-- Puter.js loaded once globally to avoid customElement re-definition -->
+  <script src="https://js.puter.com/v2/"></script>
   <script>
     // Profile dropdown toggle
     const btn = document.getElementById('profileMenuButton');
@@ -232,9 +234,10 @@
       });
     });
 
-    // Add loading states to forms
+    // Add loading states to forms (skips forms that opt out)
     document.querySelectorAll('form').forEach(form => {
       form.addEventListener('submit', function() {
+        if (this.hasAttribute('data-no-global-loading')) return;
         const submitBtn = this.querySelector('button[type="submit"]');
         if (submitBtn) {
           submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';

@@ -1,13 +1,12 @@
 import os
 from django.template.loader import render_to_string
-from ai_agents.ai_service import AIService
 
 class PortfolioGenerator:
     """Generates portfolio HTML from data and template using AI agents"""
     
     def __init__(self):
         self.template_dir = os.path.join(os.path.dirname(__file__), 'templates', 'portfolio', 'templates')
-        self.ai_service = AIService()
+        self.ai_service = None
     
     def generate_portfolio(self, portfolio_data, template_id):
         """Generate portfolio HTML based on selected template id"""
@@ -35,8 +34,8 @@ class PortfolioGenerator:
     
     def _generate_creative_portfolio(self, data):
         """Generate the creative portfolio template (Angie's style) using AI"""
-        # Enhance data using AI
-        enhanced_data = self.ai_service.generate_portfolio_content(data, 'creative')
+        # No server-side AI enhancement; keep original data
+        enhanced_data = None
         
         if enhanced_data:
             # Use AI-enhanced data

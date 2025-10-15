@@ -167,7 +167,7 @@
                         </div>
                         <div class="text-4xl font-bold text-primary-600 mb-2">{{ result.final_score }}/100</div>
                         <div class="w-full bg-primary-200 rounded-full h-2">
-                            <div class="bg-primary-500 h-2 rounded-full" style="width: {{ result.final_score }}%"></div>
+                            <div class="bg-primary-500 h-2 rounded-full" data-progress="{{ result.final_score }}"></div>
                         </div>
                         <p class="text-sm text-primary-700 mt-2">Weighted ATS compatibility</p>
                     </div>
@@ -181,7 +181,7 @@
                         </div>
                         <div class="text-4xl font-bold text-blue-600 mb-2">{{ real_analysis.keyword_score }}/100</div>
                         <div class="w-full bg-blue-200 rounded-full h-2">
-                            <div class="bg-blue-500 h-2 rounded-full" style="width: {{ real_analysis.keyword_score }}%"></div>
+                            <div class="bg-blue-500 h-2 rounded-full" data-progress="{{ real_analysis.keyword_score }}"></div>
                         </div>
                         <p class="text-sm text-blue-700 mt-2">Technical & soft skills match</p>
                     </div>
@@ -194,7 +194,7 @@
                         </div>
                         <div class="text-4xl font-bold text-green-600 mb-2">{{ real_analysis.section_score }}/100</div>
                         <div class="w-full bg-green-200 rounded-full h-2">
-                            <div class="bg-green-500 h-2 rounded-full" style="width: {{ real_analysis.section_score }}%"></div>
+                            <div class="bg-green-500 h-2 rounded-full" data-progress="{{ real_analysis.section_score }}"></div>
                         </div>
                         <p class="text-sm text-green-700 mt-2">Complete resume sections</p>
                     </div>
@@ -207,7 +207,7 @@
                         </div>
                         <div class="text-4xl font-bold text-purple-600 mb-2">{{ real_analysis.format_score }}/100</div>
                         <div class="w-full bg-purple-200 rounded-full h-2">
-                            <div class="bg-purple-500 h-2 rounded-full" style="width: {{ real_analysis.format_score }}%"></div>
+                            <div class="bg-purple-500 h-2 rounded-full" data-progress="{{ real_analysis.format_score }}"></div>
                         </div>
                         <p class="text-sm text-purple-700 mt-2">ATS-friendly formatting</p>
                     </div>
@@ -282,7 +282,7 @@
                                 <span class="font-semibold text-blue-600">{{ real_analysis.keyword_score }}%</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="bg-blue-500 h-2 rounded-full" style="width: {{ real_analysis.keyword_score }}%"></div>
+                                <div class="bg-blue-500 h-2 rounded-full" data-progress="{{ real_analysis.keyword_score }}"></div>
                             </div>
                             <p class="text-xs text-gray-500">
                                 {% if real_analysis.keyword_score >= 80 %}
@@ -308,7 +308,7 @@
                                 <span class="font-semibold text-green-600">{{ real_analysis.section_score }}%</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="bg-green-500 h-2 rounded-full" style="width: {{ real_analysis.section_score }}%"></div>
+                                <div class="bg-green-500 h-2 rounded-full" data-progress="{{ real_analysis.section_score }}"></div>
                             </div>
                             <p class="text-xs text-gray-500">
                                 {% if real_analysis.section_score >= 80 %}
@@ -334,7 +334,7 @@
                                 <span class="font-semibold text-purple-600">{{ real_analysis.format_score }}%</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="bg-purple-500 h-2 rounded-full" style="width: {{ real_analysis.format_score }}%"></div>
+                                <div class="bg-purple-500 h-2 rounded-full" data-progress="{{ real_analysis.format_score }}"></div>
                             </div>
                             <p class="text-xs text-gray-500">
                                 {% if real_analysis.format_score >= 80 %}
@@ -360,7 +360,7 @@
                                 <span class="font-semibold text-orange-600">{{ real_analysis.experience_score }}%</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="bg-orange-500 h-2 rounded-full" style="width: {{ real_analysis.experience_score }}%"></div>
+                                <div class="bg-orange-500 h-2 rounded-full" data-progress="{{ real_analysis.experience_score }}"></div>
                             </div>
                             <p class="text-xs text-gray-500">
                                 {% if real_analysis.experience_score >= 80 %}
@@ -579,7 +579,10 @@
             </div>
         </div>
     </div>
+
 </div>
+
+<!-- Puter.js is loaded globally in base.html -->
 
 <!-- Custom JavaScript -->
 <script>
@@ -613,27 +616,60 @@ function downloadResume() {
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('atsForm');
     const textarea = document.getElementById('{{ form.job_description.id_for_label }}');
-    
-    // Add focus effects
-    textarea.addEventListener('focus', function() {
-        this.parentElement.classList.add('ring-2', 'ring-primary-200');
-    });
-    
-    textarea.addEventListener('blur', function() {
-        this.parentElement.classList.remove('ring-2', 'ring-primary-200');
-    });
-    
-    // Auto-resize textarea
-    textarea.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = this.scrollHeight + 'px';
-    });
-    
-    // Form submission with loading state
-    form.addEventListener('submit', function() {
+    const resumeTextFromServer = `{{ resume_text|default:""|escapejs }}`;
+
+    form.addEventListener('submit', async function(ev) {
+        ev.preventDefault();
         const submitBtn = this.querySelector('button[type="submit"]');
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Analyzing...';
+        const originalLabel = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Analyzing with AI...';
         submitBtn.disabled = true;
+
+        try {
+            const jd = textarea.value?.trim();
+            const resumeText = resumeTextFromServer?.trim();
+
+            if (resumeText && jd) {
+                const prompt =
+`You are an GENUINE ATS evaluator. Score the resume against the JD. TRY TO BE VERY GENUINE.
+Return strictly:
+### ATS Score:
+<0-100 integer>
+
+### Missing Keywords:
+<comma-separated, max 30>
+
+### Suggestions:
+<6-10 short bullets>
+
+Candidate Resume:
+---
+${resumeText}
+---
+
+Job Description:
+---
+${jd}
+---`;
+
+                const response = await puter.ai.chat(prompt, { model: 'gpt-5-nano' });
+                let hidden = document.getElementById('puter_result');
+                if (!hidden) {
+                    hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'puter_result';
+                    hidden.id = 'puter_result';
+                    form.appendChild(hidden);
+                }
+                hidden.value = String(response || '');
+            }
+        } catch (e) {
+            console.warn('Puter.js ATS check failed:', e);
+        } finally {
+            submitBtn.innerHTML = originalLabel;
+            submitBtn.disabled = false;
+            form.submit();
+        }
     });
 });
 </script>

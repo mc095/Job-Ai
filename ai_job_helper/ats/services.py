@@ -2,7 +2,7 @@ import re
 import json
 from typing import List, Tuple, Dict
 from django.conf import settings
-from groq import Groq
+ 
 
 # regex for tokens incl. tech like c++, c#, .net
 _WORD = re.compile(r"[A-Za-z][A-Za-z\-\+\.#\d]{1,}")
@@ -226,72 +226,4 @@ def baseline_overlap_score(resume_text: str, jd_text: str) -> Tuple[int, List[st
     analysis = real_ats_analysis(resume_text, jd_text)
     return analysis['final_score'], analysis['missing_keywords']
 
-def call_groq_analysis(resume_text: str, job_description: str, rewrite: bool) -> Dict[str, str]:
-    client = Groq(api_key=getattr(settings, "GROQ_API_KEY", None))
-
-    rewrite_block = (
-        "Also include a full optimized resume under a heading '### Optimized Resume:' "
-        "that preserves truthful experience, avoids fabrications, and improves phrasing."
-        if rewrite else
-        "Do NOT include a rewritten resume."
-    )
-
-    prompt = f"""
-You are an ATS and career expert. Compare the candidate's resume with the job description.
-
-Return EXACTLY these sections (use these headings):
-### ATS Score:
-<single integer 0-100>
-
-### Missing Keywords:
-<comma-separated keywords (max 30)>
-
-### Suggestions:
-<6-10 bullet points>
-
-{rewrite_block}
-{resume_text}
-{job_description}
-"""
-
-    completion = client.chat.completions.create(
-        model="gemma2-9b-it",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.5,
-        max_completion_tokens=1200,
-        top_p=1,
-        stream=False
-    )
-    content = completion.choices[0].message.content
-
-    # Parse sections
-    llm_score = 0
-    missing_keywords = ""
-    suggestions = ""
-    optimized_resume = ""
-
-    m = re.search(r"###\s*ATS\s*Score:\s*(\d{1,3})", content, flags=re.I)
-    if m:
-        llm_score = int(m.group(1))
-        llm_score = max(0, min(100, llm_score))
-
-    m = re.search(r"###\s*Missing\s*Keywords:\s*(.+?)(?:\n###|\Z)", content, flags=re.I | re.S)
-    if m:
-        missing_keywords = m.group(1).strip()
-
-    m = re.search(r"###\s*Suggestions:\s*(.+?)(?:\n###|\Z)", content, flags=re.I | re.S)
-    if m:
-        suggestions = m.group(1).strip()
-
-    if rewrite:
-        m = re.search(r"###\s*Optimized\s*Resume:\s*(.+)\Z", content, flags=re.I | re.S)
-        if m:
-            optimized_resume = m.group(1).strip()
-
-    return {
-        "llm_score": llm_score,
-        "missing_keywords": missing_keywords,
-        "suggestions": suggestions,
-        "optimized_resume": optimized_resume,
-        "raw": content,
-    }
+# Removed legacy Groq-based analysis; client-side Puter.js is preferred.

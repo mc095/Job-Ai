@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Exam, Question, Answer
 from django.conf import settings
-from ai_agents.ai_service import AIService
+ 
 
 @login_required
 def home(request):
@@ -56,23 +56,11 @@ def exam_loading(request):
             'weaknesses': weaknesses
         }
 
-        # Use AI service to generate personalized, non-repeating questions
-        ai_service = AIService()
-        # Build a uniqueness token to encourage different generations
-        from datetime import datetime
-        uniqueness_token = f"{request.user.id}-{datetime.utcnow().timestamp()}"
-        # Nudge the model for diversity without changing the signature
-        user_context['uniqueness_token'] = uniqueness_token
-        questions_data = ai_service.generate_exam_questions_for_user(
-            user_context=user_context,
-            avoidance_list=recent_qs,
-            job_role=job_role,
-            num_questions=30,
-            difficulty="medium",
-        )
+        # Client-side Puter.js should generate questions; server no longer calls Gemini/Groq
+        questions_data = { 'questions': [] }
         
-        if not questions_data or 'questions' not in questions_data:
-            return render(request, "exam/error.html", {"message": "Failed to generate exam questions"})
+        if not questions_data or 'questions' not in questions_data or not questions_data['questions']:
+            return render(request, "exam/error.html", {"message": "Exam generation now runs client-side. Please use the updated UI to generate questions with Puter.js and retry."})
 
         # --- Sanitize and enforce option diversity/quality ---
         import difflib

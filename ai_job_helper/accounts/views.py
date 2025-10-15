@@ -3,8 +3,9 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 from django.contrib import messages
-from .forms import SignUpForm, UserProfileForm
+from .forms import SignUpForm, UserProfileForm, ForgotPasswordForm
 from .models import UserProfile
 
 # Text extraction helpers
@@ -167,3 +168,31 @@ def profile(request):
     else:
         form = UserProfileForm(instance=profile)
     return render(request, 'accounts/profile.html', {'form': form})
+
+
+def forgot_password(request):
+    """Handle forgot password functionality"""
+    if request.method == 'POST':
+        form = ForgotPasswordForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            new_password = form.cleaned_data['new_password']
+            
+            try:
+                user = User.objects.get(username=username)
+                user.set_password(new_password)
+                user.save()
+                
+                messages.success(request, 'Password updated successfully! You can now sign in with your new password.')
+                return redirect('login')
+            except User.DoesNotExist:
+                messages.error(request, 'Username not found.')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = ForgotPasswordForm()
+    
+    return render(request, 'registration/forgot_password.html', {
+        'form': form, 
+        'hide_header': True
+    })

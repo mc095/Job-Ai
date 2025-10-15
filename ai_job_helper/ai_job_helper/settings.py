@@ -27,9 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-94p@wd!g_ck1!s7qn-pmy=2*p12$rpqki-1i&4qjqh)=mz!_b('
 
-###### API KEY
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+###### API KEY (Gemini/Groq removed; client-side Puter.js is used)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

@@ -36,5 +36,12 @@ class AgentMemory(models.Model):
     topic_stats = models.JSONField(default=dict)  # {topic: {attempted:int, correct:int, accuracy:float}}
     last_updated = models.DateTimeField(auto_now=True)
 
+    # High-level session logs to avoid storing every message
+    sessions = models.JSONField(default=list)  # [{type:'training'|'interview', id:str, started_at:iso, ended_at:iso|null, summary:str, score:float|null}]
+
+    # Last scores
+    last_ats_score = models.IntegerField(null=True, blank=True)
+    last_exam_scores = models.JSONField(default=list)  # list[int]
+
     def __str__(self):
         return f"AgentMemory({self.user.username})"
