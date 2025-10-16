@@ -4,7 +4,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Exam, Question, Answer
 from django.conf import settings
- 
+from ai_agents.ai_service import AIService
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
 
 @login_required
 def home(request):
@@ -21,212 +23,148 @@ def home(request):
 
 @login_required
 def exam_loading(request):
-    """
-    Initiates the exam generation process using AI agents.
-    """
+    """Generate exam with ONE API call - 30 unique, non-repetitive questions."""
     try:
         job_role = request.session.get("job_role")
         if not job_role:
             return redirect("exam_home")
 
-        # Build user context for personalization
-        resume_text = getattr(request.user.userprofile, 'resume_text', '') or ''
-        # Collect past exam scores (latest 10)
-        from .models import Exam as ExamModel
-        past_scores = list(ExamModel.objects.filter(user=request.user).order_by('-created_at').values_list('score', flat=True)[:10])
-        # Pull preferences and strengths/weaknesses from AgentMemory (if exists)
-        from analysis.models import AgentMemory
-        try:
-            mem = AgentMemory.objects.get(user=request.user)
-            preferences = mem.preferences or {}
-            strengths = mem.strengths or []
-            weaknesses = mem.weaknesses or []
-        except AgentMemory.DoesNotExist:
-            preferences = {}
-            strengths = []
-            weaknesses = []
-        # Avoid repeating recent questions for this role (latest 50)
-        from .models import Question as QModel
-        recent_qs = list(QModel.objects.filter(exam__user=request.user, exam__job_role=job_role).order_by('-_id').values_list('text', flat=True)[:50])
-        user_context = {
-            'resume_text': resume_text,
-            'past_scores': past_scores,
-            'preferences': preferences,
-            'strengths': strengths,
-            'weaknesses': weaknesses
-        }
-
-        # Client-side Puter.js should generate questions; server no longer calls Gemini/Groq
-        questions_data = { 'questions': [] }
-        
-        if not questions_data or 'questions' not in questions_data or not questions_data['questions']:
-            return render(request, "exam/error.html", {"message": "Exam generation now runs client-side. Please use the updated UI to generate questions with Puter.js and retry."})
-
-        # --- Sanitize and enforce option diversity/quality ---
-        import difflib
-
-        def is_generic(text: str) -> bool:
-            if not isinstance(text, str):
-                return True
-            t = text.strip().lower()
-            return (t == '' or
-                    'all of the above' in t or
-                    'none of the above' in t or
-                    t in {'all', 'none', 'both', 'neither'})
-
-        def options_are_diverse(opts):
-            norm = [strip_label(o or '').lower() for o in opts]
-            # Unique and non-empty
-            if len(set(norm)) < len(norm):
-                return False
-            if any(len(o) < 2 for o in norm):
-                return False
-            # Avoid highly similar options
-            for i in range(len(norm)):
-                for j in range(i+1, len(norm)):
-                    if difflib.SequenceMatcher(a=norm[i], b=norm[j]).ratio() > 0.85:
-                        return False
-            return True
-
-        needed = 30
-        attempts = 0
-        max_attempts = 3
-        accumulated = []
-
-        def extract_good_questions(payload):
-            out = []
-            for q in payload.get('questions', []):
-                qtext = q.get('question', '')
-                if is_generic(qtext):
-                    continue
-                opts = (q.get('options') or q.get('choices') or q.get('answers') or [])
-                if not isinstance(opts, list):
-                    continue
-                # Ensure 4 options
-                while len(opts) < 4:
-                    opts.append('')
-                opts = [strip_label(x or '') for x in opts[:4]]
-                if any(is_generic(o) for o in opts):
-                    continue
-                if not options_are_diverse(opts):
-                    continue
-                # Valid correct answer mapping
-                correct_letter = normalize_correct_letter(opts, q.get('correct_answer'))
-                if correct_letter not in {'A','B','C','D'}:
-                    continue
-                out.append({
-                    'question': qtext,
-                    'options': opts,
-                    'correct_letter': correct_letter,
-                    'explanation': q.get('explanation', ''),
-                    'topic': q.get('topic') or None
-                })
-            return out
-
-        # First batch
-        accumulated.extend(extract_good_questions(questions_data))
-
-        # If not enough, fetch more with updated avoidance
-        while len(accumulated) < needed and attempts < max_attempts:
-            attempts += 1
-            more_avoid = recent_qs + [q['question'] for q in accumulated]
-            more = ai_service.generate_exam_questions_for_user(
-                user_context=user_context,
-                avoidance_list=more_avoid,
-                job_role=job_role,
-                num_questions=needed - len(accumulated),
-                difficulty="medium",
-            )
-            if not more or 'questions' not in more:
-                break
-            accumulated.extend(extract_good_questions(more))
-            # Deduplicate by question text
-            seen = set()
-            dedup = []
-            for q in accumulated:
-                if q['question'] in seen:
-                    continue
-                seen.add(q['question'])
-                dedup.append(q)
-            accumulated = dedup
-            
-        if not accumulated:
-            return render(request, "exam/error.html", {"message": "Could not generate high-quality unique questions. Please try again."})
-
-        # Create the exam and questions in the database.
-        exam = Exam.objects.create(
-            user=request.user,
-            job_role=job_role
+        # Get recent questions to avoid repetition
+        recent_questions = list(
+            Question.objects.filter(
+                exam__user=request.user,
+                exam__job_role=job_role
+            ).order_by('-_id').values_list('text', flat=True)[:50]
         )
 
-        # Store exam ID in session for navigation
+        # ONE API call to generate 30 unique questions
+        ai_service = AIService()
+        data = ai_service.generate_exam_questions_for_user(
+            user_context={},
+            avoidance_list=recent_questions,
+            job_role=job_role,
+            num_questions=30,
+            difficulty="medium",
+        )
+        
+        questions = data.get('questions', [])
+        if len(questions) < 20:
+            return render(request, "exam/error.html", {"message": "Failed to generate enough exam questions. Please try again."})
+
+        # Create exam
+        exam = Exam.objects.create(user=request.user, job_role=job_role)
         request.session['current_exam_id'] = str(exam._id)
 
-        # Also avoid recent global questions for this role to reduce cross-user repetition
-        from .models import Question as QGlobal
-        global_recent = set(list(QGlobal.objects.filter(exam__job_role=job_role)
-                                 .order_by('-_id').values_list('text', flat=True)[:200]))
+        # Save questions to database (up to 30)
+        for q in questions[:30]:
+            opts = q.get("options", ["","","",""])
+            while len(opts) < 4:
+                opts.append("")
+            
+            correct = q.get("correct_answer", "A")
+            if isinstance(correct, int):
+                correct = ['A','B','C','D'][correct] if 0 <= correct < 4 else 'A'
+            else:
+                correct = str(correct)[0].upper() if correct else 'A'
 
-        import re
-
-        def strip_label(text: str) -> str:
-            if not isinstance(text, str):
-                return ''
-            # Remove leading labels like "A.", "(A)", "A)" and extra spaces
-            return re.sub(r"^[\s\(\[]?[A-Da-d][\)\].:\-\s]+\s*", "", text).strip()
-
-        def normalize_correct_letter(options_list, correct_value):
-            letters = ['A', 'B', 'C', 'D']
-            # If already a proper letter
-            if isinstance(correct_value, str):
-                cv = correct_value.strip().upper()
-                if cv in letters:
-                    return cv
-            # If numeric index
-            try:
-                idx = int(correct_value)
-                if 0 <= idx < len(options_list):
-                    return letters[idx]
-            except Exception:
-                pass
-            # Match by option text
-            if isinstance(correct_value, str):
-                target = strip_label(correct_value).lower()
-                for i, opt in enumerate(options_list):
-                    if target == strip_label(opt or '').lower():
-                        return letters[i]
-            # Default
-            return 'A'
-
-        saved = 0
-        for question_data in accumulated[:needed]:
-            # Skip globally recent duplicates
-            if question_data.get('question') in global_recent:
-                continue
-            topic = question_data.get("topic") or None
-            options = question_data.get("options") or []
-            correct_letter = question_data.get("correct_letter")
-            question = Question.objects.create(
+            Question.objects.create(
                 exam=exam,
-                text=question_data["question"],
-                option_a=options[0],
-                option_b=options[1],
-                option_c=options[2],
-                option_d=options[3],
-                correct_option=correct_letter,
-                explanation=question_data.get("explanation", ""),
-                topic=topic
+                text=q.get("question", ""),
+                option_a=str(opts[0]),
+                option_b=str(opts[1]),
+                option_c=str(opts[2]),
+                option_d=str(opts[3]),
+                correct_option=correct,
+                explanation=q.get("explanation", ""),
+                topic=q.get("topic", job_role)
             )
-            saved += 1
 
-        if saved == 0:
-            return render(request, "exam/error.html", {"message": "No unique questions could be generated. Please try again."})
-
-        # Redirect to the first question.
         return redirect("exam_test", exam_id=str(exam._id), question_num=1)
 
     except Exception as e:
-        return render(request, "exam/error.html", {"message": f"Error generating exam: {str(e)}"})
+        return render(request, "exam/error.html", {"message": f"Error: {str(e)}"})
+
+@login_required
+@require_POST
+def import_exam(request):
+    """Accept client-generated questions JSON and create an exam.
+
+    Expected JSON body:
+    { "job_role": str, "questions": [ {question, options[4], correct_answer (A-D or text), explanation, topic} ] }
+    """
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+    except Exception:
+        return JsonResponse({"ok": False, "error": "Invalid JSON"}, status=400)
+
+    job_role = (data.get("job_role") or "").strip()
+    items = data.get("questions") or []
+    if not job_role or not isinstance(items, list):
+        return JsonResponse({"ok": False, "error": "Missing job_role or questions"}, status=400)
+
+    # Deduplicate and validate up to 30, fallback to 20
+    seen = set()
+    valid = []
+    for q in items:
+        qtext = (q.get("question") or "").strip()
+        if not qtext:
+            continue
+        key = qtext.lower()
+        if key in seen:
+            continue
+        options = q.get("options") or []
+        if not isinstance(options, list):
+            options = []
+        while len(options) < 4:
+            options.append("")
+        options = [str(o or "") for o in options[:4]]
+        corr = q.get("correct_answer")
+        mapping = {0:'A',1:'B',2:'C',3:'D'}
+        if isinstance(corr, int) and corr in mapping:
+            correct_letter = mapping[corr]
+        elif isinstance(corr, str):
+            up = corr.strip().upper()
+            if up in {'A','B','C','D'}:
+                correct_letter = up
+            else:
+                match_idx = next((i for i, opt in enumerate(options) if opt.strip().lower() == corr.strip().lower()), 0)
+                correct_letter = mapping.get(match_idx, 'A')
+        else:
+            correct_letter = 'A'
+        valid.append({
+            "question": qtext,
+            "options": options,
+            "correct": correct_letter,
+            "explanation": q.get("explanation", ""),
+            "topic": (q.get("topic") or None)
+        })
+        seen.add(key)
+
+    target = 30 if len(valid) >= 30 else (20 if len(valid) >= 20 else 0)
+    if target == 0:
+        return JsonResponse({"ok": False, "error": "Insufficient unique questions"}, status=400)
+
+    # Create exam and persist
+    exam = Exam.objects.create(user=request.user, job_role=job_role)
+    for q in valid[:target]:
+        Question.objects.create(
+            exam=exam,
+            text=q["question"],
+            option_a=q["options"][0],
+            option_b=q["options"][1],
+            option_c=q["options"][2],
+            option_d=q["options"][3],
+            correct_option=q["correct"],
+            explanation=q.get("explanation", ""),
+            topic=q.get("topic")
+        )
+
+    request.session['current_exam_id'] = str(exam._id)
+    return JsonResponse({"ok": True, "redirect": 
+        request.build_absolute_uri(
+            redirect("exam_test", exam_id=str(exam._id), question_num=1).url
+        )
+    })
 
 @login_required
 def exam_test(request, exam_id, question_num):
@@ -293,7 +231,9 @@ def exam_test(request, exam_id, question_num):
             'exam_id': exam_id,
             'selected_option': selected_option,
             'is_correct': is_correct,
-            'show_feedback': selected_option is not None
+            'show_feedback': selected_option is not None,
+            'explanation': current_question.explanation,  # Pass explanation for display
+            'correct_option': current_question.correct_option
         }
         
         return render(request, "exam/test.html", context)
@@ -371,6 +311,6 @@ def start_exam(request, exam_id):
     try:
         exam = get_object_or_404(Exam, _id=ObjectId(exam_id), user=request.user)
         request.session['current_exam_id'] = str(exam._id)
-        return redirect("exam_test", exam_id=str(exam._id), question_num=1)
+        return redirect("exam_test", question_num=1)
     except Exception as e:
         return render(request, "exam/error.html", {"message": f"Error starting exam: {str(e)}"})

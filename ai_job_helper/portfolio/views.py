@@ -130,6 +130,72 @@ def download_portfolio(request):
         messages.error(request, 'Portfolio not found.')
         return redirect('create_portfolio')
 
+def _flatten_portfolio_data_for_form(portfolio_data):
+    """Convert structured portfolio JSON back to form format for editing"""
+    flat_data = {}
+    
+    # Personal info
+    personal = portfolio_data.get('personalInfo', {})
+    flat_data['name'] = personal.get('name', '')
+    flat_data['titles'] = '\n'.join(personal.get('titles', []))
+    flat_data['bio'] = personal.get('bio', '')
+    flat_data['location'] = personal.get('contact', {}).get('location', '')
+    flat_data['email'] = personal.get('contact', {}).get('email', '')
+    flat_data['phone'] = personal.get('contact', {}).get('phone', '')
+    
+    # Profile images
+    flat_data['profile_image_small'] = personal.get('profileImageSmall', '')
+    flat_data['profile_image_large'] = personal.get('profileImageLarge', '')
+    
+    # Socials
+    socials = personal.get('socials', [])
+    for social in socials:
+        name = social.get('name', '').lower()
+        if name == 'github':
+            flat_data['github_url'] = social.get('url', '')
+        elif name == 'linkedin':
+            flat_data['linkedin_url'] = social.get('url', '')
+        elif name == 'twitter':
+            flat_data['twitter_url'] = social.get('url', '')
+        elif name == 'website':
+            flat_data['website_url'] = social.get('url', '')
+    
+    # Experience
+    exp_lines = []
+    for exp in portfolio_data.get('experience', []):
+        line = f"{exp.get('company', '')} | {exp.get('role', '')} | {exp.get('duration', '')} | {exp.get('description', '')}"
+        exp_lines.append(line)
+    flat_data['experience'] = '\n'.join(exp_lines)
+    
+    # Education
+    edu_lines = []
+    for edu in portfolio_data.get('education', []):
+        line = f"{edu.get('institution', '')} | {edu.get('degree', '')} | {edu.get('year', '')}"
+        if edu.get('gpa'):
+            line += f" | {edu.get('gpa')}"
+        edu_lines.append(line)
+    flat_data['education'] = '\n'.join(edu_lines)
+    
+    # Skills
+    flat_data['skills'] = ', '.join(portfolio_data.get('skills', []))
+    
+    # Projects
+    proj_lines = []
+    for proj in portfolio_data.get('projects', []):
+        links = proj.get('links', {})
+        line = f"{proj.get('title', '')} | {proj.get('shortDescription', '')} | {proj.get('image', '')} | {links.get('live', '#')} | {links.get('repo', '#')}"
+        proj_lines.append(line)
+    flat_data['projects'] = '\n'.join(proj_lines)
+    
+    # Certifications
+    cert_lines = []
+    for cert in portfolio_data.get('certifications', []):
+        line = f"{cert.get('name', '')} | {cert.get('issuer', '')} | {cert.get('year', '')}"
+        cert_lines.append(line)
+    flat_data['certifications'] = '\n'.join(cert_lines)
+    
+    return flat_data
+
 def process_portfolio_data(form_data):
     """Process form data into structured JSON format"""
     # Parse titles
@@ -169,15 +235,14 @@ def process_portfolio_data(form_data):
     for line in form_data['projects'].split('\n'):
         if line.strip():
             parts = [part.strip() for part in line.split('|')]
-            if len(parts) >= 6:
+            if len(parts) >= 5:
                 projects.append({
                     'title': parts[0],
                     'shortDescription': parts[1],
-                    'longDescription': parts[2],
-                    'technologies': parts[3],
+                    'image': parts[2] if parts[2] else None,
                     'links': {
-                        'live': parts[4] if parts[4] != '#' else '#',
-                        'repo': parts[5] if parts[5] != '#' else '#'
+                        'live': parts[3] if parts[3] != '#' else '#',
+                        'repo': parts[4] if parts[4] != '#' else '#'
                     }
                 })
     

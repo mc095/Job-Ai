@@ -25,15 +25,117 @@
     }
     </style>
 
+    <script src="https://unpkg.com/puter-js@latest/dist/puter.min.js"></script>
     <script>
-        // Automatically submit the form when the page loads
-        window.onload = function() {
-            document.getElementById('loadingForm').submit();
+    (async function() {
+        const csrfToken = '{{ csrf_token }}';
+        const jobRole = '{{ request.session.job_role|escapejs }}';
+        function dedupe(items) {
+            const seen = new Set();
+            const out = [];
+            for (const it of items) {
+                const q = (it.question||'').trim();
+                if (!q) continue;
+                const k = q.toLowerCase();
+                if (seen.has(k)) continue;
+                seen.add(k);
+                out.push(it);
+            }
+            return out;
         }
-    </script>
+        function normalize(items) {
+            return items.map(it => {
+                let options = Array.isArray(it.options) ? it.options.slice(0,4) : [];
+                while (options.length < 4) options.push('');
+                let ans = it.correct_answer;
+                const map = {0:'A',1:'B',2:'C',3:'D'};
+                let letter = 'A';
+                if (typeof ans === 'number' && map[ans]) letter = map[ans];
+                else if (typeof ans === 'string') {
+                    const up = ans.trim().toUpperCase();
+                    if (['A','B','C','D'].includes(up)) letter = up;
+                    else {
+                        const idx = options.findIndex(o => String(o).trim().toLowerCase() === ans.trim().toLowerCase());
+                        letter = map[idx] || 'A';
+                    }
+                }
+                return {
+                    question: (it.question||'').trim(),
+                    options: options.map(o => String(o||'')),
+                    correct_answer: letter,
+                    explanation: String(it.explanation||''),
+                    topic: it.topic ? String(it.topic) : null
+                };
+            });
+        }
 
-    <form id="loadingForm" method="GET" action="{% url 'exam_loading' %}" class="hidden">
-        {% csrf_token %}
-    </form>
+        async function generateBatch(count, avoid) {
+            const prompt = `Create ${count} unique MCQs for role: ${jobRole}. Strict JSON only: {"questions":[{"question":str,"options":[str,str,str,str],"correct_answer":"A|B|C|D","explanation":str,"topic":str}]}. Avoid: ${JSON.stringify((avoid||[]).slice(0,50))}`;
+            // Use Puter AI if available; otherwise, fallback to fetch a server stub (optional)
+            try {
+                const res = await window.Puter.ai.chat(prompt);
+                let text = String(res || '{}');
+                try { return JSON.parse(text).questions || []; } catch (e) {
+                    const m = text.match(/\{[\s\S]*\}$/);
+                    return m ? (JSON.parse(m[0]).questions||[]) : [];
+                }
+            } catch (e) {
+                return [];
+            }
+        }
+
+        const collected = [];
+        const avoid = [];
+        for (let i=0;i<3;i++) {
+            const batch = await generateBatch(10, avoid);
+            const norm = normalize(dedupe(batch));
+            for (const q of norm) {
+                if (!q.question) continue;
+                const key = q.question.toLowerCase();
+                if (avoid.includes(key)) continue;
+                collected.push(q);
+                avoid.push(key);
+            }
+        }
+        // Extra small batch if needed
+        if (collected.length < 30) {
+            const batch = await generateBatch(10, avoid);
+            const norm = normalize(dedupe(batch));
+            for (const q of norm) {
+                if (!q.question) continue;
+                const key = q.question.toLowerCase();
+                if (avoid.includes(key)) continue;
+                collected.push(q);
+                avoid.push(key);
+            }
+        }
+
+        const target = collected.length >= 30 ? 30 : (collected.length >= 20 ? 20 : 0);
+        if (!target) {
+            document.querySelector('.text-sm').innerText = 'Failed to generate sufficient questions. Please go back and try again.';
+            return;
+        }
+
+        // POST to server
+        const resp = await fetch('{% url "exam_import" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ job_role: jobRole, questions: collected.slice(0, target) })
+        });
+        if (!resp.ok) {
+            document.querySelector('.text-sm').innerText = 'Failed to save questions. Please try again.';
+            return;
+        }
+        const data = await resp.json();
+        if (data && data.ok && data.redirect) {
+            window.location.href = data.redirect;
+        } else {
+            document.querySelector('.text-sm').innerText = 'Failed to start exam. Please try again.';
+        }
+    })();
+    </script>
 </div>
 {% endblock %}

@@ -214,11 +214,39 @@ document.addEventListener('DOMContentLoaded', function() {
         this.parentElement.classList.remove('ring-2', 'ring-primary-200');
     });
     
-    // Form submission with loading state
-    form.addEventListener('submit', function() {
+    // Form submission: try Puter.js client-side generation first
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
         const submitBtn = this.querySelector('button[type="submit"]');
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating Test...';
+        const original = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating with AI...';
         submitBtn.disabled = true;
+
+        try {
+            const role = jobRoleInput.value?.trim();
+            if (role && window.puter && puter.ai && puter.ai.chat) {
+                const prompt = `Create ${30} high-quality multiple-choice questions for the job role: ${role}.\n` +
+`Return STRICT JSON with schema: { "questions": [ { "question": string, "options": [string, string, string, string], "correct_answer": string|integer, "explanation": string, "topic": string } ] }`;
+                const result = await puter.ai.chat(prompt, { model: 'gpt-5-nano' });
+                if (result) {
+                    let hidden = document.getElementById('puter_exam_json');
+                    if (!hidden) {
+                        hidden = document.createElement('input');
+                        hidden.type = 'hidden';
+                        hidden.name = 'puter_exam_json';
+                        hidden.id = 'puter_exam_json';
+                        form.appendChild(hidden);
+                    }
+                    hidden.value = String(result);
+                }
+            }
+        } catch (err) {
+            console.warn('Puter.js exam generation failed:', err);
+        } finally {
+            submitBtn.innerHTML = original;
+            submitBtn.disabled = false;
+            form.submit();
+        }
     });
     
     // Add animation to popular job role buttons

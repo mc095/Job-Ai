@@ -292,12 +292,11 @@
                         </label>
                         <div id="projectsList" class="space-y-3"></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <input id="projTitle" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Title">
-                            <input id="projTech" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Technologies (comma-separated)">
-                            <input id="projLive" type="url" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Live URL (optional)">
+                            <input id="projTitle" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Project Title">
+                            <input id="projImage" type="url" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Image URL (optional)">
+                            <textarea id="projShort" rows="2" class="px-3 py-2 border border-gray-300 rounded-lg md:col-span-2" placeholder="Brief description (1-2 sentences)"></textarea>
+                            <input id="projLive" type="url" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Live Demo URL (optional)">
                             <input id="projRepo" type="url" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="GitHub URL (optional)">
-                            <input id="projShort" type="text" class="px-3 py-2 border border-gray-300 rounded-lg md:col-span-2" placeholder="Short description">
-                            <textarea id="projLong" rows="3" class="px-3 py-2 border border-gray-300 rounded-lg md:col-span-2" placeholder="Long description"></textarea>
                         </div>
                         <div class="flex justify-end">
                             <button type="button" id="addProjectBtn" class="px-4 py-2 bg-primary-600 text-white rounded-lg">Add Project</button>
@@ -493,16 +492,14 @@ document.addEventListener('DOMContentLoaded', function() {    // Form validation
     if (addProjectBtn) addProjectBtn.addEventListener('click', ()=>{
       const t=document.getElementById('projTitle').value.trim();
       const s=document.getElementById('projShort').value.trim();
-      const l=document.getElementById('projLong').value.trim();
-      const tech=document.getElementById('projTech').value.trim();
+      const img=document.getElementById('projImage').value.trim()||'';
       const live=document.getElementById('projLive').value.trim()||'#';
       const repo=document.getElementById('projRepo').value.trim()||'#';
-      if(!t||!s||!l||!tech) return alert('Fill all required project fields.');
-      projItems.push({t,s,l,tech,live,repo});
+      if(!t||!s) return alert('Fill project title and description.');
+      projItems.push({t,s,img,live,repo});
       document.getElementById('projTitle').value='';
       document.getElementById('projShort').value='';
-      document.getElementById('projLong').value='';
-      document.getElementById('projTech').value='';
+      document.getElementById('projImage').value='';
       document.getElementById('projLive').value='';
       document.getElementById('projRepo').value='';
       renderProjects();
@@ -512,10 +509,10 @@ document.addEventListener('DOMContentLoaded', function() {    // Form validation
       projItems.forEach((p,i)=>{
         const row=document.createElement('div');
         row.className='p-3 bg-white border border-gray-200 rounded-lg flex justify-between items-start';
-        row.innerHTML=`<div><div class='font-semibold'>${p.t}</div><div class='text-sm text-gray-600'>${p.tech}</div><div class='text-sm mt-1'>${p.s}</div></div><button type='button' class='text-red-600' onclick='removeProject(${i})'>Remove</button>`;
+        row.innerHTML=`<div><div class='font-semibold'>${p.t}</div><div class='text-sm text-gray-600 mt-1'>${p.s}</div>${p.img?`<div class='text-xs text-gray-500 mt-1'>Image: ${p.img.substring(0,40)}...</div>`:''}</div><button type='button' class='text-red-600' onclick='removeProject(${i})'>Remove</button>`;
         projectsList.appendChild(row);
       });
-      projectsHidden.value = projItems.map(p=>`${p.t} | ${p.s} | ${p.l} | ${p.tech} | ${p.live} | ${p.repo}`).join('\n');
+      projectsHidden.value = projItems.map(p=>`${p.t} | ${p.s} | ${p.img} | ${p.live} | ${p.repo}`).join('\n');
     }
     window.removeProject = function(i){ projItems.splice(i,1); renderProjects(); }
 
@@ -545,6 +542,70 @@ document.addEventListener('DOMContentLoaded', function() {    // Form validation
       certHidden.value = certItems.map(c=>`${c.n} | ${c.iss} | ${c.y}`).join('\n');
     }
     window.removeCert = function(i){ certItems.splice(i,1); renderCerts(); }
+
+    // Prefill form with existing data
+    const initialSkills = '{{ form.initial.skills|default:""|escapejs }}';
+    const initialExp = `{{ form.initial.experience|default:""|escapejs }}`;
+    const initialEdu = `{{ form.initial.education|default:""|escapejs }}`;
+    const initialProj = `{{ form.initial.projects|default:""|escapejs }}`;
+    const initialCert = `{{ form.initial.certifications|default:""|escapejs }}`;
+    
+    // Prefill skills
+    if (initialSkills) {
+        initialSkills.split(',').forEach(s => {
+            const skill = s.trim();
+            if (skill) skills.push(skill);
+        });
+        renderSkills();
+    }
+    
+    // Prefill experience
+    if (initialExp) {
+        initialExp.split('\n').forEach(line => {
+            if (!line.trim()) return;
+            const parts = line.split('|').map(p => p.trim());
+            if (parts.length >= 4) {
+                expItems.push({c: parts[0], r: parts[1], d: parts[2], desc: parts[3]});
+            }
+        });
+        renderExp();
+    }
+    
+    // Prefill education
+    if (initialEdu) {
+        initialEdu.split('\n').forEach(line => {
+            if (!line.trim()) return;
+            const parts = line.split('|').map(p => p.trim());
+            if (parts.length >= 3) {
+                eduItems.push({inst: parts[0], deg: parts[1], yr: parts[2], gpa: parts[3] || ''});
+            }
+        });
+        renderEdu();
+    }
+    
+    // Prefill projects
+    if (initialProj) {
+        initialProj.split('\n').forEach(line => {
+            if (!line.trim()) return;
+            const parts = line.split('|').map(p => p.trim());
+            if (parts.length >= 5) {
+                projItems.push({t: parts[0], s: parts[1], img: parts[2]||'', live: parts[3]||'#', repo: parts[4]||'#'});
+            }
+        });
+        renderProjects();
+    }
+    
+    // Prefill certifications
+    if (initialCert) {
+        initialCert.split('\n').forEach(line => {
+            if (!line.trim()) return;
+            const parts = line.split('|').map(p => p.trim());
+            if (parts.length >= 3) {
+                certItems.push({n: parts[0], iss: parts[1], y: parts[2]});
+            }
+        });
+        renderCerts();
+    }
 
     form.addEventListener('submit', function(){
       skillsHidden.value = skills.join(', ');

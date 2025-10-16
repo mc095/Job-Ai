@@ -1,149 +1,379 @@
-import requests
 import json
 from bson import ObjectId
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from exam.models import Exam, Question, Answer
 from django.conf import settings
-from .models import InterviewSession, InterviewMessage
-from analysis.models import AgentMemory
  
 
 @login_required
 def interview_home(request):
-    """
-    Handles the interview home page, allowing a user to start a new session.
-    It retrieves the user's resume and initializes a new interview session.
-    """
-    # Get user's resume if available
-    resume_text = request.user.userprofile.resume_text.strip() if request.user.userprofile.resume_text else ""
-
-    if request.method == "POST":
-        jd = request.POST.get("job_description")
-        session = InterviewSession.objects.create(
-            user=request.user,
-            job_description=jd,
-            resume_text=resume_text
-        )
-
-        # Create initial interviewer message
-        welcome_message = (
-            "Hello! I will be conducting your interview today. "
-            "I've reviewed your resume and the job description. "
-            "I'll ask you a series of questions relevant to the position. "
-            "Please take your time to provide detailed and specific answers. "
-            "Are you ready to begin?"
-        )
-        InterviewMessage.objects.create(session=session, role="interviewer", content=welcome_message)
-
-        # Redirect to the chat page, casting the ObjectId to a string
-        return redirect("interview_chat", session_id=str(session._id))
-
     return render(request, "interview/home.html")
 
 
 @login_required
 def interview_chat(request, session_id):
     """
-    Manages the interview chat interface, displaying messages and handling user responses.
-    This view also triggers the LLM to generate new questions or final feedback.
+    Minimal chat view to satisfy routing; renders chat template.
+    """
+    context = {
+        "session_id": session_id,
+    }
+    return render(request, "interview/chat.html", context)
+
+
+@login_required
+def exam_loading(request):
+    """
+    Initiates the exam generation process using AI agents.
     """
     try:
-        session = InterviewSession.objects.get(_id=ObjectId(session_id), user=request.user)
-    except (InterviewSession.DoesNotExist, ValueError):
-        return render(request, "interview/error.html", {"message": "Interview session not found"})
+        job_role = request.session.get("job_role")
+        if not job_role:
+            return redirect("exam_home")
 
-    chat_messages = session.messages.all().order_by("timestamp")
-
-    if request.method == "POST" and not session.completed:
-        candidate_answer = request.POST.get("answer")
-        InterviewMessage.objects.create(session=session, role="candidate", content=candidate_answer)
-        # Ensure session pointer in AgentMemory
+        # Build user context for personalization
+        resume_text = getattr(request.user.userprofile, 'resume_text', '') or ''
+        # Collect past exam scores (latest 10)
+        from .models import Exam as ExamModel
+        past_scores = list(ExamModel.objects.filter(user=request.user).order_by('-created_at').values_list('score', flat=True)[:10])
+        # Pull preferences and strengths/weaknesses from AgentMemory (if exists)
+        from analysis.models import AgentMemory
         try:
-            mem, _ = AgentMemory.objects.get_or_create(user=request.user)
-            sessions = mem.sessions or []
-            if not any(s.get('id') == str(session._id) for s in sessions):
-                sessions.append({
-                    'type': 'interview',
-                    'id': str(session._id),
-                    'started_at': str(session.created_at),
-                    'ended_at': None,
-                    'summary': '',
-                    'score': None,
-                })
-                mem.sessions = sessions
-                mem.save()
-        except Exception:
-            pass
-
-        # Prepare conversation history
-        history = [{"role": m.role, "content": m.content} for m in chat_messages]
-        history.append({"role": "candidate", "content": candidate_answer})
-
-        # Global application performance context
-        try:
-            from analysis.models import AgentMemory
             mem = AgentMemory.objects.get(user=request.user)
-            strengths = ", ".join(mem.strengths or [])
-            weaknesses = ", ".join(mem.weaknesses or [])
-        except Exception:
-            strengths = ""
-            weaknesses = ""
-        try:
-            from exam.models import Exam
-            past_scores = list(Exam.objects.filter(user=request.user).order_by('-created_at').values_list('score', flat=True)[:5])
-        except Exception:
-            past_scores = []
-        system_context = (
-            f"Global context — recent scores: {past_scores}; strengths: {strengths}; weaknesses: {weaknesses}. "
-            f"Ask concise, specific questions only."
-        )
-        history.insert(0, {"role": "system", "content": system_context})
+            preferences = mem.preferences or {}
+            strengths = mem.strengths or []
+            weaknesses = mem.weaknesses or []
+        except AgentMemory.DoesNotExist:
+            preferences = {}
+            strengths = []
+            weaknesses = []
+        # Avoid repeating recent questions for this role (latest 50)
+        from .models import Question as QModel
+        recent_qs = list(QModel.objects.filter(exam__user=request.user, exam__job_role=job_role).order_by('-_id').values_list('text', flat=True)[:50])
+        user_context = {
+            'resume_text': resume_text,
+            'past_scores': past_scores,
+            'preferences': preferences,
+            'strengths': strengths,
+            'weaknesses': weaknesses
+        }
 
-        # Check if the interview is over or if a new question is needed
-        if session.current_question >= session.total_questions:
-            # Finalize with deterministic summary (no server LLM)
-            summary = "Thank you for completing the interview. We'll review your answers and get back to you."
-            InterviewMessage.objects.create(session=session, role="interviewer", content=summary)
-            session.performance_score = 0
-            session.feedback_summary = summary
-            session.completed = True
-            # update AgentMemory session end
+        # Client-side Puter.js should generate questions; server no longer calls Gemini/Groq
+        questions_data = { 'questions': [] }
+        
+        if not questions_data or 'questions' not in questions_data or not questions_data['questions']:
+            return render(request, "exam/error.html", {"message": "Exam generation now runs client-side. Please use the updated UI to generate questions with Puter.js and retry."})
+
+        # --- Sanitize and enforce option diversity/quality ---
+        import difflib
+
+        def is_generic(text: str) -> bool:
+            if not isinstance(text, str):
+                return True
+            t = text.strip().lower()
+            return (t == '' or
+                    'all of the above' in t or
+                    'none of the above' in t or
+                    t in {'all', 'none', 'both', 'neither'})
+
+        def options_are_diverse(opts):
+            norm = [strip_label(o or '').lower() for o in opts]
+            # Unique and non-empty
+            if len(set(norm)) < len(norm):
+                return False
+            if any(len(o) < 2 for o in norm):
+                return False
+            # Avoid highly similar options
+            for i in range(len(norm)):
+                for j in range(i+1, len(norm)):
+                    if difflib.SequenceMatcher(a=norm[i], b=norm[j]).ratio() > 0.85:
+                        return False
+            return True
+
+        needed = 30
+        attempts = 0
+        max_attempts = 3
+        accumulated = []
+
+        def extract_good_questions(payload):
+            out = []
+            for q in payload.get('questions', []):
+                qtext = q.get('question', '')
+                if is_generic(qtext):
+                    continue
+                opts = (q.get('options') or q.get('choices') or q.get('answers') or [])
+                if not isinstance(opts, list):
+                    continue
+                # Ensure 4 options
+                while len(opts) < 4:
+                    opts.append('')
+                opts = [strip_label(x or '') for x in opts[:4]]
+                if any(is_generic(o) for o in opts):
+                    continue
+                if not options_are_diverse(opts):
+                    continue
+                # Valid correct answer mapping
+                correct_letter = normalize_correct_letter(opts, q.get('correct_answer'))
+                if correct_letter not in {'A','B','C','D'}:
+                    continue
+                out.append({
+                    'question': qtext,
+                    'options': opts,
+                    'correct_letter': correct_letter,
+                    'explanation': q.get('explanation', ''),
+                    'topic': q.get('topic') or None
+                })
+            return out
+
+        # First batch
+        accumulated.extend(extract_good_questions(questions_data))
+
+        # If not enough, fetch more with updated avoidance
+        while len(accumulated) < needed and attempts < max_attempts:
+            attempts += 1
+            more_avoid = recent_qs + [q['question'] for q in accumulated]
+            more = ai_service.generate_exam_questions_for_user(
+                user_context=user_context,
+                avoidance_list=more_avoid,
+                job_role=job_role,
+                num_questions=needed - len(accumulated),
+                difficulty="medium",
+            )
+            if not more or 'questions' not in more:
+                break
+            accumulated.extend(extract_good_questions(more))
+            # Deduplicate by question text
+            seen = set()
+            dedup = []
+            for q in accumulated:
+                if q['question'] in seen:
+                    continue
+                seen.add(q['question'])
+                dedup.append(q)
+            accumulated = dedup
+            
+        if not accumulated:
+            return render(request, "exam/error.html", {"message": "Could not generate high-quality unique questions. Please try again."})
+
+        # Create the exam and questions in the database.
+        exam = Exam.objects.create(
+            user=request.user,
+            job_role=job_role
+        )
+
+        # Store exam ID in session for navigation
+        request.session['current_exam_id'] = str(exam._id)
+
+        # Also avoid recent global questions for this role to reduce cross-user repetition
+        from .models import Question as QGlobal
+        global_recent = set(list(QGlobal.objects.filter(exam__job_role=job_role)
+                                 .order_by('-_id').values_list('text', flat=True)[:200]))
+
+        import re
+
+        def strip_label(text: str) -> str:
+            if not isinstance(text, str):
+                return ''
+            # Remove leading labels like "A.", "(A)", "A)" and extra spaces
+            return re.sub(r"^[\s\(\[]?[A-Da-d][\)\].:\-\s]+\s*", "", text).strip()
+
+        def normalize_correct_letter(options_list, correct_value):
+            letters = ['A', 'B', 'C', 'D']
+            # If already a proper letter
+            if isinstance(correct_value, str):
+                cv = correct_value.strip().upper()
+                if cv in letters:
+                    return cv
+            # If numeric index
             try:
-                mem = AgentMemory.objects.get(user=request.user)
-                sessions = mem.sessions or []
-                for s in sessions:
-                    if s.get('id') == str(session._id):
-                        s['ended_at'] = str(session.created_at)
-                        s['summary'] = summary
-                        s['score'] = session.performance_score
-                mem.sessions = sessions
-                mem.save()
+                idx = int(correct_value)
+                if 0 <= idx < len(options_list):
+                    return letters[idx]
             except Exception:
                 pass
-        else:
-            # Generate a simple placeholder question (client-side Puter.js should drive real flow)
-            next_q = f"Question {session.current_question + 1}: Please describe a recent challenge relevant to this role and how you solved it."
-            if next_q and len(next_q) > 240:
-                next_q = next_q[:237] + '...'
-            InterviewMessage.objects.create(session=session, role="interviewer", content=next_q)
-            session.current_question += 1
+            # Match by option text
+            if isinstance(correct_value, str):
+                target = strip_label(correct_value).lower()
+                for i, opt in enumerate(options_list):
+                    if target == strip_label(opt or '').lower():
+                        return letters[i]
+            # Default
+            return 'A'
 
-        session.save()
-        return redirect("interview_chat", session_id=str(session._id))
+        saved = 0
+        for question_data in accumulated[:needed]:
+            # Skip globally recent duplicates
+            if question_data.get('question') in global_recent:
+                continue
+            topic = question_data.get("topic") or None
+            options = question_data.get("options") or []
+            correct_letter = question_data.get("correct_letter")
+            question = Question.objects.create(
+                exam=exam,
+                text=question_data["question"],
+                option_a=options[0],
+                option_b=options[1],
+                option_c=options[2],
+                option_d=options[3],
+                correct_option=correct_letter,
+                explanation=question_data.get("explanation", ""),
+                topic=topic
+            )
+            saved += 1
 
-    return render(request, "interview/chat.html", {
-        "session": session,
-        "chat_messages": chat_messages,
-        "is_completed": session.completed
-    })
+        if saved == 0:
+            return render(request, "exam/error.html", {"message": "No unique questions could be generated. Please try again."})
 
+        # Redirect to the first question.
+        return redirect("exam_test", exam_id=str(exam._id), question_num=1)
 
-def generate_interview_question(resume, jd, history):
-    """Deprecated: retained for backward compatibility."""
-    ai_service = AIService()
-    data = ai_service.generate_interview_questions(jd)
-    if data and 'questions' in data and data['questions']:
-        current_q_num = len([m for m in history if m['role'] == 'interviewer']) - 1
-        if 0 <= current_q_num < len(data['questions']):
-            return data['questions'][current_q_num]['question']
-    return "Can you tell me about a challenging project you worked on and how you overcame the obstacles?"
+    except Exception as e:
+        return render(request, "exam/error.html", {"message": f"Error generating exam: {str(e)}"})
+
+@login_required
+def exam_test(request, exam_id, question_num):
+    """
+    Displays a single question for the exam (assessment style - one question per page).
+    Handles form submission to record the answer and show feedback.
+    """
+    try:
+        exam = get_object_or_404(Exam, _id=ObjectId(exam_id), user=request.user)
+        questions = list(Question.objects.filter(exam=exam).order_by('_id'))
+        
+        if not questions:
+            return render(request, "exam/error.html", {"message": "No questions found for this exam"})
+        
+        # Get the current question (1-indexed)
+        current_question = questions[question_num - 1]
+        
+        # Get user's answer for this question
+        try:
+            user_answer = Answer.objects.get(question=current_question, user=request.user)
+            selected_option = user_answer.selected_option
+            is_correct = user_answer.is_correct
+        except Answer.DoesNotExist:
+            selected_option = None
+            is_correct = None
+        
+        # Handle form submission
+        if request.method == "POST":
+            action = request.POST.get("action", "answer")
+            
+            if action == "answer":
+                selected_option = request.POST.get("answer")
+                if selected_option:
+                    # Create or update the answer
+                    Answer.objects.update_or_create(
+                        question=current_question,
+                        user=request.user,
+                        defaults={
+                            'selected_option': selected_option,
+                            'is_correct': selected_option == current_question.correct_option
+                        }
+                    )
+                    # Refresh the answer data
+                    user_answer = Answer.objects.get(question=current_question, user=request.user)
+                    selected_option = user_answer.selected_option
+                    is_correct = user_answer.is_correct
+            
+            elif action == "next":
+                # Move to next question or finish exam
+                if question_num < len(questions):
+                    return redirect("exam_test", exam_id=exam_id, question_num=question_num + 1)
+                else:
+                    return redirect("exam_result")
+        
+        # Calculate progress
+        progress = (question_num / len(questions)) * 100
+        
+        context = {
+            'question': current_question,
+            'question_num': question_num,
+            'total_questions': len(questions),
+            'progress': progress,
+            'exam': exam,
+            'exam_id': exam_id,
+            'selected_option': selected_option,
+            'is_correct': is_correct,
+            'show_feedback': selected_option is not None
+        }
+        
+        return render(request, "exam/test.html", context)
+        
+    except (IndexError, ValueError) as e:
+        return render(request, "exam/error.html", {"message": f"Invalid question number: {str(e)}"})
+    except Exception as e:
+        return render(request, "exam/error.html", {"message": f"Error loading question: {str(e)}"})
+
+@login_required
+def exam_result(request):
+    """
+    Displays the exam results with detailed feedback.
+    """
+    try:
+        exam_id = request.session.get('current_exam_id')
+        if not exam_id:
+            return redirect("exam_home")
+        
+        exam = get_object_or_404(Exam, _id=ObjectId(exam_id))
+        questions = Question.objects.filter(exam=exam).order_by('_id')
+        
+        # Get user's answers
+        user_answers = {}
+        for question in questions:
+            try:
+                answer = Answer.objects.get(question=question, user=request.user)
+                user_answers[question._id] = answer
+            except Answer.DoesNotExist:
+                user_answers[question._id] = None
+        
+        # Calculate score
+        correct_answers = sum(1 for answer in user_answers.values() 
+                            if answer and answer.is_correct)
+        total_questions = questions.count()
+        score_percentage = (correct_answers / total_questions) * 100 if total_questions > 0 else 0
+        
+        # Save the score to the exam record
+        exam.score = int(score_percentage)
+        exam.save()
+        
+        # Prepare question results for template
+        question_results = []
+        for question in questions:
+            user_answer = user_answers.get(question._id)
+            question_results.append({
+                'question': question,
+                'selected_option': user_answer.selected_option if user_answer else None,
+                'correct_option': question.correct_option,
+                'is_correct': user_answer.is_correct if user_answer else False
+            })
+        
+        context = {
+            'exam': exam,
+            'questions': questions,
+            'user_answers': user_answers,
+            'correct_answers': correct_answers,
+            'total_questions': total_questions,
+            'score_percentage': score_percentage,
+            'percentage': score_percentage,
+            'correct_count': correct_answers,
+            'question_results': question_results
+        }
+        
+        return render(request, "exam/result.html", context)
+        
+    except Exception as e:
+        return render(request, "exam/error.html", {"message": f"Error loading results: {str(e)}"})
+
+@login_required
+def start_exam(request, exam_id):
+    """
+    Starts a specific exam by setting it in the session.
+    """
+    try:
+        exam = get_object_or_404(Exam, _id=ObjectId(exam_id), user=request.user)
+        request.session['current_exam_id'] = str(exam._id)
+        return redirect("exam_test", exam_id=str(exam._id), question_num=1)
+    except Exception as e:
+        return render(request, "exam/error.html", {"message": f"Error starting exam: {str(e)}"})
