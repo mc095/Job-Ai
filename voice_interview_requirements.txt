@@ -1,0 +1,26 @@
+# Voice Interview System Dependencies
+# Install with: pip install -r voice_interview_requirements.txt
+
+# TTS (Text-to-Speech) - Kokoro
+kokoro-onnx>=0.1.0
+onnxruntime>=1.16.0
+
+# STT (Speech-to-Text) - Moonshine
+git+https://github.com/usefulsensors/moonshine.git
+
+# Audio Processing
+numpy>=1.24.0
+scipy>=1.11.0
+soundfile>=0.12.0
+
+# Deep Learning Backend
+torch>=2.1.0
+torchaudio>=2.1.0
+
+# Optional: GPU acceleration (uncomment if you have CUDA)
+# onnxruntime-gpu>=1.16.0
+
+# Note: Make sure you have FFmpeg installed on your system
+# Windows: choco install ffmpeg
+# Mac: brew install ffmpeg
+# Linux: sudo apt-get install ffmpeg

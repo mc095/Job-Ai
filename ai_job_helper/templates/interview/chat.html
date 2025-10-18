@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  .message-enter { animation: slideUp 0.3s ease-out; }
+  .typing-indicator { animation: pulse 1.5s ease-in-out infinite; }
+</style>
+
+<div class="min-h-screen bg-white">
+  <!-- Header -->
+  <div class="sticky top-0 z-10 bg-white/80 backdrop-blur-xl border-b border-gray-200">
+    <div class="max-w-3xl mx-auto px-4 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <span class="text-white font-bold text-sm">AI</span>
+          </div>
+          <div>
+            <h1 class="text-gray-900 font-semibold text-base">Mock Interview</h1>
+            <p class="text-gray-500 text-xs mt-0.5">Professional interview simulation</p>
+          </div>
+        </div>
+        {% if not session.completed %}
+        <button id="end-interview-btn" class="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200">
+          End Interview
+        </button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Container -->
+  <div class="max-w-3xl mx-auto px-4">
+    <div id="chatScroll" class="py-8 min-h-[calc(100vh-220px)] overflow-y-auto scroll-smooth">
+      <div class="space-y-6" id="messageList">
+        {% for m in chat_messages %}
+          {% if m.role == 'interviewer' %}
+            <!-- Interviewer Message -->
+            <div class="flex items-start space-x-3 message-enter">
+              <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/20">
+                <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <div class="flex-1">
+                <div class="text-gray-700 text-[15px] leading-relaxed space-y-3 interviewer-message" data-content="{{ m.content|escapejs }}">
+                </div>
+                <div class="mt-2">
+                  <span class="text-xs text-gray-400">{{ m.timestamp|date:"M. j, Y, g:i a"|default:"Just now" }}</span>
+                </div>
+              </div>
+            </div>
+          {% elif m.role == 'candidate' %}
+            <!-- Candidate Message -->
+            <div class="flex items-start space-x-3 message-enter">
+              <div class="w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center flex-shrink-0 shadow-sm">
+                <svg class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div class="flex-1 pt-0.5">
+                <p class="text-gray-800 text-[15px] leading-relaxed">{{ m.content }}</p>
+                <div class="mt-2">
+                  <span class="text-xs text-gray-400">{{ m.timestamp|date:"M. j, Y, g:i a"|default:"Just now" }}</span>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        {% empty %}
+          <!-- Welcome Message -->
+          <div class="flex items-start space-x-3 message-enter">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/20">
+              <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <div class="text-gray-700 text-[15px] leading-relaxed space-y-3">
+                <p>Hello! I'm your AI interview coach. I'll be asking you questions based on the job description you provided. Take your time to think through each answer, and I'll provide feedback to help you improve.</p>
+                <p class="text-gray-600">Let's begin with the first question...</p>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    {% if not session.completed %}
+    <div class="sticky bottom-0 pb-6 pt-4 bg-gradient-to-t from-white via-white to-transparent">
+      <form method="post" id="chatForm" class="relative" data-no-global-loading>
+        {% csrf_token %}
+        <div class="relative bg-white rounded-2xl border border-gray-200 focus-within:border-blue-400 focus-within:shadow-lg focus-within:shadow-blue-500/10 transition-all duration-300">
+          <textarea 
+            id="msgInput" 
+            name="answer" 
+            rows="1"
+            required 
+            placeholder="Type your response..."
+            class="w-full px-5 py-4 pr-36 bg-transparent text-gray-800 placeholder-gray-400 rounded-2xl resize-none focus:outline-none text-[15px] leading-relaxed"
+            style="max-height: 200px;"
+          ></textarea>
+          <div class="absolute right-2 bottom-2 flex items-center space-x-2">
+            <button 
+              id="micBtn" 
+              type="button" 
+              class="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all duration-200"
+              title="Voice input"
+            >
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+            </button>
+            <button 
+              id="stopBtn" 
+              type="button" 
+              class="hidden px-4 py-2 rounded-xl bg-gray-100 text-gray-600 text-xs font-medium hover:bg-gray-200 transition-all duration-200 shadow-sm"
+            >
+              Stop
+            </button>
+            <button 
+              id="sendBtn" 
+              type="submit" 
+              class="p-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-lg hover:shadow-blue-500/30 hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            >
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="flex items-center justify-between mt-3">
+          <p class="text-gray-400 text-xs">Press <span class="text-gray-600 font-medium">Enter</span> to send • <span class="text-gray-600 font-medium">Shift + Enter</span> for new line</p>
+          <button 
+            id="regenBtn" 
+            type="button" 
+            class="text-xs font-medium text-gray-600 hover:text-gray-900 flex items-center space-x-1 hover:bg-gray-100 px-2 py-1 rounded-lg transition-all duration-200"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>Regenerate</span>
+          </button>
+        </div>
+      </form>
+    </div>
+    {% else %}
+    <!-- Interview Completed -->
+    <div class="sticky bottom-0 pb-6 pt-4 bg-gradient-to-t from-white via-white to-transparent">
+      <div class="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-8 text-center">
+        <div class="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/30">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">Interview Completed!</h3>
+        <p class="text-gray-600 mb-6">Great job! You've completed the mock interview session.</p>
+        <div class="flex space-x-3 justify-center">
+          <a href="{% url 'interview_home' %}" 
+             class="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 hover:shadow-md transition-all duration-200">
+            Start New Interview
+          </a>
+          <a href="{% url 'home' %}" 
+             class="px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl hover:shadow-lg hover:shadow-blue-500/30 hover:scale-105 transition-all duration-200">
+            Back to Dashboard
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+  // Parse markdown for server-rendered interviewer messages
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.interviewer-message').forEach(el => {
+      const content = el.getAttribute('data-content');
+      if (content) {
+        el.innerHTML = parseMarkdown(content);
+      }
+    });
+  });
+
+  (function() {
+  const chatEl = document.getElementById('chatScroll');
+  const form = document.getElementById('chatForm');
+  const msgInput = document.getElementById('msgInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const regenBtn = document.getElementById('regenBtn');
+  const micBtn = document.getElementById('micBtn');
+  const list = document.getElementById('messageList');
+  let interviewEnded = false;
+
+  let currentStream = null;
+  let lastUserMessage = '';
+
+  // Smooth scroll to bottom
+  function smoothScrollToBottom() {
+    chatEl.scrollTo({
+      top: chatEl.scrollHeight,
+      behavior: 'smooth'
+    });
+  }
+
+  // Auto-resize textarea
+  if (msgInput) {
+    msgInput.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+    });
+
+    // Enter key handling
+    msgInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        form.dispatchEvent(new Event('submit'));
+      }
+    });
+
+    // Focus input on load
+    msgInput.focus();
+  }
+
+  if (chatEl) { 
+    setTimeout(() => smoothScrollToBottom(), 100);
+  }
+
+  function addUserBubble(text) {
+    const div = document.createElement('div');
+    div.className = 'flex items-start space-x-3 message-enter';
+    div.innerHTML = `
+      <div class="w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center flex-shrink-0 shadow-sm">
+        <svg class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+      </div>
+      <div class="flex-1 pt-0.5">
+        <p class="text-gray-800 text-[15px] leading-relaxed">${text.replace(/\n/g,'<br>')}</p>
+      </div>`;
+    list.appendChild(div);
+    setTimeout(() => smoothScrollToBottom(), 50);
+  }
+
+  function addAiContainer() {
+    const wrap = document.createElement('div');
+    wrap.className = 'flex items-start space-x-3 message-enter';
+    wrap.innerHTML = `
+      <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/20">
+        <svg class="w-4 h-4 text-white typing-indicator" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+      </div>
+      <div class="flex-1">
+        <div class="text-gray-700 text-[15px] leading-relaxed space-y-3" id="aiText"></div>
+      </div>`;
+    list.appendChild(wrap);
+    setTimeout(() => smoothScrollToBottom(), 50);
+    return wrap.querySelector('#aiText');
+  }
+
+  function buildPrompt(userMsg) {
+    const resumeText = `{{ session.resume_text|default:""|escapejs }}`;
+    const jobDesc = `{{ session.job_description|default:""|escapejs }}`;
+    if (userMsg === '__END_SESSION__') {
+      return `ROLE: Interviewer. The interview is now over. Provide FINAL FEEDBACK ONLY.\nReturn a concise scored summary (0-100) and exactly 3 strengths and 3 improvements based strictly on the dialog context, the resume, and the job description.\n\nResume:\n---\n${resumeText}\n---\n\nJob Description:\n---\n${jobDesc}\n---`;
+    }
+    return `ROLE: Strict, medium-difficulty Interviewer. Task: Conduct a realistic interview and provide final feedback at the end.\n\nRules:\n- Ask ONE question per turn. Medium difficulty.\n- Be concise, professional, and specific to the JD.\n- Track candidate strengths/weaknesses to summarize at the end.\n- Do not reveal answers; probe for depth.\n\nResume:\n---\n${resumeText}\n---\n\nJob Description:\n---\n${jobDesc}\n---\n\nCandidate Answer:\n---\n${userMsg}\n---\n\nNow ask the next interview question. If the session is over, provide a short scored summary (0-100) with 3 strengths and 3 improvements.`;
+  }
+
+    async function streamResponse(userMsg) {
+    const target = addAiContainer();
+    const aiIcon = list.lastElementChild.querySelector('.typing-indicator');
+    stopBtn.classList.remove('hidden');
+    sendBtn.disabled = true;
+    
+    try {
+      const resp = await puter.ai.chat(buildPrompt(userMsg), { 
+        stream: true, 
+        model: 'claude-sonnet-4', 
+        temperature: 0.3 
+      });
+      
+      currentStream = resp;
+      
+      // Remove typing indicator once streaming starts
+      if (aiIcon) aiIcon.classList.remove('typing-indicator');
+      
+          let fullText = '';
+      for await (const part of resp) {
+            const chunk = (part && typeof part === 'object') ? (part.text ?? '') : String(part ?? '');
+            if (chunk) {
+              fullText += chunk;
+              target.innerHTML = parseMarkdown(fullText);
+              smoothScrollToBottom();
+            }
+          }
+
+      // TTS for AI response
+      if (window.speechSynthesis && target.textContent) {
+        const utter = new SpeechSynthesisUtterance(target.textContent);
+        utter.rate = 1.05;
+        utter.pitch = 1.0;
+        utter.volume = 1.0;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utter);
+      }
+        } catch (e) {
+          if (aiIcon) aiIcon.classList.remove('typing-indicator');
+          const msg = (e && typeof e === 'object') ? (e.message || JSON.stringify(e)) : String(e);
+          target.innerHTML += `<div class="text-red-500 font-medium">[Error: ${msg}]</div>`;
+    } finally {
+      stopBtn.classList.add('hidden');
+      sendBtn.disabled = false;
+      currentStream = null;
+      if (msgInput) msgInput.focus();
+    }
+  }
+
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = msgInput.value.trim();
+      if (!text) return;
+      
+      lastUserMessage = text;
+      addUserBubble(text);
+      msgInput.value = '';
+      msgInput.style.height = 'auto';
+      
+      // Persist user message (non-blocking)
+      try {
+        const fd = new FormData(form);
+        await fetch('', { method: 'POST', body: fd, credentials: 'same-origin' });
+      } catch {}
+      
+      // Stream AI response
+      await streamResponse(text);
+    });
+  }
+
+  // Stop button
+  if (stopBtn) {
+    stopBtn.addEventListener('click', () => {
+      stopBtn.classList.add('hidden');
+      currentStream = null;
+      window.speechSynthesis.cancel();
+    });
+  }
+
+  // Regenerate button
+  if (regenBtn) {
+    regenBtn.addEventListener('click', async () => {
+      if (!lastUserMessage) return;
+      await streamResponse(lastUserMessage);
+    });
+  }
+
+  // Voice input (Web Speech API)
+  if (micBtn) {
+    let recognition;
+    try {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.addEventListener('result', (e) => {
+          const transcript = Array.from(e.results).map(r => r[0].transcript).join(' ');
+          msgInput.value = (msgInput.value ? msgInput.value + ' ' : '') + transcript;
+          msgInput.dispatchEvent(new Event('input'));
+        });
+
+        micBtn.addEventListener('click', () => {
+          recognition.start();
+          micBtn.classList.add('text-red-500');
+          setTimeout(() => micBtn.classList.remove('text-red-500'), 2000);
+        });
+      }
+    } catch (e) {
+      console.log('Speech recognition not available');
+    }
+  }
+
+  // End interview button -> request FINAL FEEDBACK and lock input
+  const endBtn = document.getElementById('end-interview-btn');
+  if (endBtn) {
+    endBtn.addEventListener('click', async () => {
+      if (!confirm('End interview and receive final feedback?')) return;
+      interviewEnded = true;
+      // disable input UI
+      if (msgInput) { msgInput.disabled = true; }
+      if (sendBtn) { sendBtn.disabled = true; }
+      // ask for final feedback
+      await streamResponse('__END_SESSION__');
+      // hide controls after feedback
+      if (form) { form.classList.add('hidden'); }
+      if (endBtn) { endBtn.classList.add('hidden'); }
+    });
+  }
+
+  stopBtn?.classList.add('hidden');
+  })();
+</script>
+{% endblock %}
+{% endblock %}

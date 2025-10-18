@@ -1,0 +1,76 @@
+====================================
+QUICK FIX - ALL MISSING DEPENDENCIES
+====================================
+
+YOUR ERRORS:
+1. No module named 'tensorflow'
+2. Moonshine STT not installed
+3. espeak-ng not found
+4. Question generation failed
+
+ROOT CAUSE:
+You installed the WRONG moonshine package (one that needs TensorFlow)
+
+====================================
+QUICK FIX (Run these commands):
+====================================
+
+1. Open terminal in project folder
+
+2. Activate virtual environment:
+   venv\Scripts\activate
+
+3. Remove wrong packages:
+   pip uninstall -y moonshine moonshine-speech tensorflow keras
+
+4. Install correct packages:
+   pip install kokoro>=0.9.4 soundfile useful-moonshine-onnx numpy torch
+
+5. Download and install espeak-ng:
+   https://github.com/espeak-ng/espeak-ng/releases
+   (Get espeak-ng-X64.msi for Windows 64-bit)
+
+6. Restart terminal
+
+7. Test:
+   python test_kokoro.py
+
+8. Start Django:
+   python manage.py runserver
+
+====================================
+OR USE THE AUTOMATED SCRIPT:
+====================================
+
+Just run:
+   fix_voice_dependencies.bat
+
+====================================
+MISSING DEPENDENCIES LIST:
+====================================
+
+✅ Install with pip:
+   - kokoro (version 0.9.4+)
+   - soundfile
+   - useful-moonshine-onnx  ← CORRECT package (NO TensorFlow!)
+   - numpy
+   - torch
+
+❌ Remove these (wrong/unneeded):
+   - moonshine
+   - moonshine-speech
+   - tensorflow
+   - keras
+
+🔧 Install manually:
+   - espeak-ng (system package, not pip)
+
+====================================
+FILES TO READ:
+====================================
+
+- MISSING_DEPENDENCIES.md → Full details
+- fix_voice_dependencies.bat → Automated fix
+- test_kokoro.py → Test installation
+
+====================================

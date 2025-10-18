@@ -1,0 +1,38 @@
+# Voice Interview Dependencies
+# Install with: pip install -r requirements-voice.txt
+
+# ============================================
+# IMPORTANT: Read MISSING_DEPENDENCIES.md first!
+# ============================================
+
+# Kokoro TTS - High-quality neural text-to-speech
+kokoro>=0.9.4
+
+# Audio processing
+soundfile>=0.12.1
+numpy>=1.24.0
+
+# PyTorch (CPU version - use CUDA version if you have GPU)
+torch>=2.0.0
+torchaudio>=2.0.0
+
+# Moonshine STT - Speech-to-text (ONNX version - NO TensorFlow!)
+# CRITICAL: Use useful-moonshine-onnx, NOT moonshine-speech or moonshine
+useful-moonshine-onnx
+
+# ============================================
+# SYSTEM DEPENDENCIES (Install separately!)
+# ============================================
+# 
+# espeak-ng (Required for Kokoro TTS)
+# - Windows: Download .msi from https://github.com/espeak-ng/espeak-ng/releases
+# - Linux: sudo apt-get install espeak-ng
+# - macOS: brew install espeak-ng
+#
+# ============================================
+# DO NOT INSTALL THESE (Wrong packages!)
+# ============================================
+# ❌ moonshine (deprecated, uses TensorFlow)
+# ❌ moonshine-speech (deprecated, uses TensorFlow)
+# ❌ tensorflow (NOT needed with ONNX version)
+# ❌ keras (NOT needed with ONNX version)

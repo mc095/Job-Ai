@@ -1,0 +1,57 @@
+====================================
+COPY-PASTE THESE COMMANDS
+====================================
+
+Open terminal in: E:\Agentic-Job-AI
+
+Then copy-paste each command ONE BY ONE:
+
+------------------------------------
+venv\Scripts\activate
+------------------------------------
+
+------------------------------------
+python -m pip install --upgrade pip
+------------------------------------
+
+------------------------------------
+pip uninstall -y moonshine moonshine-speech tensorflow keras
+------------------------------------
+
+------------------------------------
+pip install kokoro>=0.9.4 soundfile numpy
+------------------------------------
+
+------------------------------------
+pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+------------------------------------
+
+------------------------------------
+pip install git+https://github.com/moonshine-ai/moonshine.git#subdirectory=moonshine-onnx
+------------------------------------
+
+(This last command downloads from GitHub and may take 1-2 minutes)
+
+After all pip installs complete:
+
+1. Download espeak-ng from:
+   https://github.com/espeak-ng/espeak-ng/releases
+   
+2. Get: espeak-ng-X64.msi
+
+3. Run the installer
+
+4. Restart terminal
+
+5. Test:
+   python test_kokoro.py
+
+6. Start Django:
+   python manage.py runserver
+
+7. Open browser:
+   http://127.0.0.1:8000/interview/voice/
+
+====================================
+THAT'S IT!
+====================================

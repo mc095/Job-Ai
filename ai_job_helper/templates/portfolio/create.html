@@ -1,0 +1,616 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="min-h-screen py-8">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header Section -->
+        <div class="text-center mb-12 animate-fade-in">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl shadow-xl mb-6">
+                <i class="fas fa-briefcase text-white text-3xl"></i>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-900 via-primary-600 to-secondary-600 bg-clip-text text-transparent mb-4">
+                Create Your Portfolio
+            </h1>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                Fill out the form below with your information. We'll generate beautiful, professional portfolio templates for you to choose from.
+            </p>
+        </div>
+
+        <!-- Progress Indicator -->
+        <div class="mb-8">
+            <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-sm font-medium text-gray-700">Portfolio Creation Progress</span>
+                    <span class="text-sm font-medium text-primary-600">Step 1 of 3</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-gradient-to-r from-primary-500 to-secondary-500 h-2 rounded-full w-1/3 transition-all duration-500"></div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-500 mt-2">
+                    <span>Information</span>
+                    <span>Template</span>
+                    <span>Download</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Form -->
+        <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+            <form method="post" action="{% url 'create_portfolio' %}" class="space-y-0" id="portfolioForm">
+                {% csrf_token %}
+                
+                <!-- Personal Information Section -->
+                <div class="bg-gradient-to-br from-primary-50 to-secondary-50 p-8 border-b border-gray-200/50">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800">Personal Information</h2>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label for="{{ form.name.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+                                Full Name <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" 
+                                   name="name" 
+                                   id="{{ form.name.id_for_label }}"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                                   placeholder="Enter your full name"
+                                   required>
+                            {% if form.name.errors %}
+                                <div class="text-red-500 text-sm mt-1">{{ form.name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label for="{{ form.location.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+                                Location
+                            </label>
+                            <input type="text" 
+                                   name="location" 
+                                   id="{{ form.location.id_for_label }}"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                                   placeholder="City, Country">
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 space-y-2">
+                        <label for="{{ form.titles.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+                            Job Titles <span class="text-red-500">*</span>
+                        </label>
+                        <textarea name="titles" 
+                                  id="{{ form.titles.id_for_label }}"
+                                  rows="3"
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none"
+                                  placeholder="Enter each title on a new line&#10;Example:&#10;Software Developer&#10;UI/UX Designer&#10;Full Stack Engineer"
+                                  required></textarea>
+                        <p class="text-sm text-gray-500">{{ form.titles.help_text }}</p>
+                        {% if form.titles.errors %}
+                            <div class="text-red-500 text-sm">{{ form.titles.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mt-6 space-y-2">
+                        <label for="{{ form.bio.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+                            Bio <span class="text-red-500">*</span>
+                        </label>
+                        <textarea name="bio" 
+                                  id="{{ form.bio.id_for_label }}"
+                                  rows="4"
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none"
+                                  placeholder="Tell us about yourself, your passion, and what you do..."
+                                  required></textarea>
+                        {% if form.bio.errors %}
+                            <div class="text-red-500 text-sm">{{ form.bio.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Contact Information Section -->
+                <div class="bg-gradient-to-br from-accent-50 to-primary-50 p-8 border-b border-gray-200/50">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-accent-500 to-primary-500 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-envelope text-white"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800">Contact Information</h2>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label for="{{ form.email.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+                                Email <span class="text-red-500">*</span>
+                            </label>
+                            <input type="email" 
+                                   name="email" 
+                                   id="{{ form.email.id_for_label }}"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                                   placeholder="your.email@example.com"
+                                   required>
+                            {% if form.email.errors %}
+                                <div class="text-red-500 text-sm mt-1">{{ form.email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label for="{{ form.phone.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+                                Phone
+                            </label>
+                            <input type="tel" 
+                                   name="phone" 
+                                   id="{{ form.phone.id_for_label }}"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                                   placeholder="+1 (555) 123-4567">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Social Links Section -->
+                <div class="bg-gradient-to-br from-secondary-50 to-accent-50 p-8 border-b border-gray-200/50">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-secondary-500 to-accent-500 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-share-alt text-white"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800">Social Links</h2>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label for="{{ form.github_url.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+                                <i class="fab fa-github mr-2"></i>GitHub URL
+                            </label>
+                            <input type="url" 
+                                   name="github_url" 
+                                   id="{{ form.github_url.id_for_label }}"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                                   placeholder="https://github.com/yourusername">
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label for="{{ form.linkedin_url.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+                                <i class="fab fa-linkedin mr-2"></i>LinkedIn URL
+                            </label>
+                            <input type="url" 
+                                   name="linkedin_url" 
+                                   id="{{ form.linkedin_url.id_for_label }}"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                                   placeholder="https://linkedin.com/in/yourusername">
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label for="{{ form.website_url.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+                                <i class="fas fa-globe mr-2"></i>Website URL
+                            </label>
+                            <input type="url" 
+                                   name="website_url" 
+                                   id="{{ form.website_url.id_for_label }}"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                                   placeholder="https://yourwebsite.com">
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label for="{{ form.twitter_url.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+                                <i class="fab fa-twitter mr-2"></i>Twitter URL
+                            </label>
+                            <input type="url" 
+                                   name="twitter_url" 
+                                   id="{{ form.twitter_url.id_for_label }}"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                                   placeholder="https://twitter.com/yourusername">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Experience Section -->
+                <div class="bg-gradient-to-br from-orange-50 to-red-50 p-8 border-b border-gray-200/50">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-briefcase text-white"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800">Work Experience</h2>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <label class="block text-sm font-semibold text-gray-700">
+                            Experience <span class="text-red-500">*</span>
+                        </label>
+                        <div id="expList" class="space-y-3"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <input id="expCompany" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Company">
+                            <input id="expRole" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Role / Title">
+                            <input id="expDuration" type="text" class="px-3 py-2 border border-gray-300 rounded-lg md:col-span-2" placeholder="Duration (e.g., 2022–Present)">
+                            <textarea id="expDesc" rows="2" class="px-3 py-2 border border-gray-300 rounded-lg md:col-span-2" placeholder="Impact-driven description (2-3 bullets)"></textarea>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="button" id="addExpBtn" class="px-4 py-2 bg-primary-600 text-white rounded-lg">Add Experience</button>
+                        </div>
+                        <input type="hidden" name="experience" id="expHidden" required>
+                    </div>
+                </div>
+
+                <!-- Education Section -->
+                <div class="bg-gradient-to-br from-indigo-50 to-purple-50 p-8 border-b border-gray-200/50">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-graduation-cap text-white"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800">Education</h2>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <label class="block text-sm font-semibold text-gray-700">
+                            Education <span class="text-red-500">*</span>
+                        </label>
+                        <div id="eduList" class="space-y-3"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <input id="eduInstitution" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Institution">
+                            <input id="eduDegree" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Degree">
+                            <input id="eduYear" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Year">
+                            <input id="eduGpa" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="GPA (optional)">
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="button" id="addEduBtn" class="px-4 py-2 bg-primary-600 text-white rounded-lg">Add Education</button>
+                        </div>
+                        <input type="hidden" name="education" id="eduHidden" required>
+                    </div>
+                </div>
+
+                <!-- Skills Section -->
+                <div class="bg-gradient-to-br from-green-50 to-teal-50 p-8 border-b border-gray-200/50">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-500 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-tools text-white"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800">Skills</h2>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-gray-700">
+                            Skills <span class="text-red-500">*</span>
+                        </label>
+                        <div id="skillsChips" class="flex flex-wrap gap-2 bg-white/80 border border-gray-300 rounded-xl p-3"></div>
+                        <div class="flex items-center space-x-2">
+                            <input type="text" id="skillInput" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" placeholder="Add a skill and press Enter">
+                            <button type="button" id="addSkillBtn" class="px-4 py-2 bg-primary-600 text-white rounded-lg">Add</button>
+                        </div>
+                        <input type="hidden" name="skills" id="skillsHidden" required>
+                    </div>
+                </div>
+
+                <!-- Projects Section -->
+                <div class="bg-gradient-to-br from-pink-50 to-rose-50 p-8 border-b border-gray-200/50">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-pink-500 to-rose-500 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-project-diagram text-white"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800">Projects</h2>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <label class="block text-sm font-semibold text-gray-700">
+                            Projects <span class="text-red-500">*</span>
+                        </label>
+                        <div id="projectsList" class="space-y-3"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <input id="projTitle" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Project Title">
+                            <input id="projImage" type="url" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Image URL (optional)">
+                            <textarea id="projShort" rows="2" class="px-3 py-2 border border-gray-300 rounded-lg md:col-span-2" placeholder="Brief description (1-2 sentences)"></textarea>
+                            <input id="projLive" type="url" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Live Demo URL (optional)">
+                            <input id="projRepo" type="url" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="GitHub URL (optional)">
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="button" id="addProjectBtn" class="px-4 py-2 bg-primary-600 text-white rounded-lg">Add Project</button>
+                        </div>
+                        <input type="hidden" name="projects" id="projectsHidden" required>
+                    </div>
+                </div>
+
+                <!-- Certifications Section -->
+                <div class="bg-gradient-to-br from-yellow-50 to-amber-50 p-8 border-b border-gray-200/50">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-yellow-500 to-amber-500 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-certificate text-white"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800">Certifications</h2>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <label class="block text-sm font-semibold text-gray-700">
+                            Certifications
+                        </label>
+                        <div id="certList" class="space-y-3"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <input id="certName" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Certification">
+                            <input id="certIssuer" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Issuer">
+                            <input id="certYear" type="text" class="px-3 py-2 border border-gray-300 rounded-lg" placeholder="Year">
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="button" id="addCertBtn" class="px-4 py-2 bg-primary-600 text-white rounded-lg">Add Certification</button>
+                        </div>
+                        <input type="hidden" name="certifications" id="certHidden">
+                    </div>
+                </div>
+
+                <!-- Profile Images Section -->
+                <div class="bg-gradient-to-br from-cyan-50 to-blue-50 p-8">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-images text-white"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800">Profile Images (Optional)</h2>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label for="{{ form.profile_image_small.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+                                Small Profile Image URL
+                            </label>
+                            <input type="url" 
+                                   name="profile_image_small" 
+                                   id="{{ form.profile_image_small.id_for_label }}"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                                   placeholder="https://example.com/profile-small.jpg">
+                            <p class="text-sm text-gray-500">{{ form.profile_image_small.help_text }}</p>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label for="{{ form.profile_image_large.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+                                Large Profile Image URL
+                            </label>
+                            <input type="url" 
+                                   name="profile_image_large" 
+                                   id="{{ form.profile_image_large.id_for_label }}"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                                   placeholder="https://example.com/profile-large.jpg">
+                            <p class="text-sm text-gray-500">{{ form.profile_image_large.help_text }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="bg-white/60 backdrop-blur-sm p-8">
+                    <div class="flex flex-col sm:flex-row justify-end space-y-4 sm:space-y-0 sm:space-x-4">
+                        <a href="{% url 'portfolio_home' %}" 
+                           class="inline-flex items-center justify-center px-8 py-4 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-xl transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-lg">
+                            <i class="fas fa-times mr-2"></i>
+                            Cancel
+                        </a>
+                        <button type="submit" 
+                                class="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-semibold rounded-xl transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-xl">
+                            <i class="fas fa-magic mr-2"></i>
+                            Generate Portfolio Templates
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Custom JavaScript for enhanced UX -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {    // Form validation and enhancement
+    const form = document.getElementById('portfolioForm');
+    const inputs = form.querySelectorAll('input, textarea');
+    
+    // Add focus effects
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.classList.add('ring-2', 'ring-primary-200');
+        });
+        
+        input.addEventListener('blur', function() {
+            this.parentElement.classList.remove('ring-2', 'ring-primary-200');
+        });
+    });
+    
+    // Let native HTML5 validation handle required fields
+    
+    // Builders (skills, experience, education, projects, certifications)
+    const skills = [];
+    const skillsChips = document.getElementById('skillsChips');
+    const skillsHidden = document.getElementById('skillsHidden');
+    const skillInput = document.getElementById('skillInput');
+    const addSkillBtn = document.getElementById('addSkillBtn');
+    if (addSkillBtn) addSkillBtn.addEventListener('click', addSkill);
+    if (skillInput) skillInput.addEventListener('keydown', e => { if (e.key==='Enter'){ e.preventDefault(); addSkill(); }});
+    function renderSkills(){
+      skillsChips.innerHTML = '';
+      skills.forEach((s, i)=>{
+        const chip = document.createElement('span');
+        chip.className = 'px-3 py-1 bg-primary-100 text-primary-800 rounded-full text-sm flex items-center gap-2';
+        chip.innerHTML = `${s} <button type="button" class="ml-1 text-primary-600" onclick="removeSkill(${i})">×</button>`;
+        skillsChips.appendChild(chip);
+      });
+      skillsHidden.value = skills.join(', ');
+    }
+    window.removeSkill = function(idx){ skills.splice(idx,1); renderSkills(); }
+    function addSkill(){ const v = (skillInput?.value||'').trim(); if(!v) return; skills.push(v); if (skillInput) skillInput.value=''; renderSkills(); }
+
+    const expItems = [];
+    const expList = document.getElementById('expList');
+    const expHidden = document.getElementById('expHidden');
+    const addExpBtn = document.getElementById('addExpBtn');
+    if (addExpBtn) addExpBtn.addEventListener('click', ()=>{
+      const c = document.getElementById('expCompany').value.trim();
+      const r = document.getElementById('expRole').value.trim();
+      const d = document.getElementById('expDuration').value.trim();
+      const desc = document.getElementById('expDesc').value.trim();
+      if(!c||!r||!d||!desc) return alert('Fill all experience fields.');
+      expItems.push({c,r,d,desc});
+      document.getElementById('expCompany').value='';
+      document.getElementById('expRole').value='';
+      document.getElementById('expDuration').value='';
+      document.getElementById('expDesc').value='';
+      renderExp();
+    });
+    function renderExp(){
+      expList.innerHTML='';
+      expItems.forEach((e,i)=>{
+        const row=document.createElement('div');
+        row.className='p-3 bg-white border border-gray-200 rounded-lg flex justify-between items-start';
+        row.innerHTML=`<div><div class='font-semibold'>${e.c} — ${e.r}</div><div class='text-sm text-gray-600'>${e.d}</div><div class='text-sm mt-1'>${e.desc}</div></div><button type='button' class='text-red-600' onclick='removeExp(${i})'>Remove</button>`;
+        expList.appendChild(row);
+      });
+      expHidden.value = expItems.map(e=>`${e.c} | ${e.r} | ${e.d} | ${e.desc}`).join('\n');
+    }
+    window.removeExp = function(i){ expItems.splice(i,1); renderExp(); }
+
+    const eduItems = [];
+    const eduList = document.getElementById('eduList');
+    const eduHidden = document.getElementById('eduHidden');
+    const addEduBtn = document.getElementById('addEduBtn');
+    if (addEduBtn) addEduBtn.addEventListener('click', ()=>{
+      const inst = document.getElementById('eduInstitution').value.trim();
+      const deg = document.getElementById('eduDegree').value.trim();
+      const yr = document.getElementById('eduYear').value.trim();
+      const gpa = document.getElementById('eduGpa').value.trim();
+      if(!inst||!deg||!yr) return alert('Fill required education fields.');
+      eduItems.push({inst,deg,yr,gpa});
+      document.getElementById('eduInstitution').value='';
+      document.getElementById('eduDegree').value='';
+      document.getElementById('eduYear').value='';
+      document.getElementById('eduGpa').value='';
+      renderEdu();
+    });
+    function renderEdu(){
+      eduList.innerHTML='';
+      eduItems.forEach((e,i)=>{
+        const row=document.createElement('div');
+        row.className='p-3 bg-white border border-gray-200 rounded-lg flex justify-between items-start';
+        row.innerHTML=`<div><div class='font-semibold'>${e.inst}</div><div class='text-sm text-gray-600'>${e.deg} • ${e.yr}${e.gpa? ' • GPA '+e.gpa:''}</div></div><button type='button' class='text-red-600' onclick='removeEdu(${i})'>Remove</button>`;
+        eduList.appendChild(row);
+      });
+      eduHidden.value = eduItems.map(e=>`${e.inst} | ${e.deg} | ${e.yr}${e.gpa? ' | '+e.gpa:''}`).join('\n');
+    }
+    window.removeEdu = function(i){ eduItems.splice(i,1); renderEdu(); }
+
+    const projItems = [];
+    const projectsList = document.getElementById('projectsList');
+    const projectsHidden = document.getElementById('projectsHidden');
+    const addProjectBtn = document.getElementById('addProjectBtn');
+    if (addProjectBtn) addProjectBtn.addEventListener('click', ()=>{
+      const t=document.getElementById('projTitle').value.trim();
+      const s=document.getElementById('projShort').value.trim();
+      const img=document.getElementById('projImage').value.trim()||'';
+      const live=document.getElementById('projLive').value.trim()||'#';
+      const repo=document.getElementById('projRepo').value.trim()||'#';
+      if(!t||!s) return alert('Fill project title and description.');
+      projItems.push({t,s,img,live,repo});
+      document.getElementById('projTitle').value='';
+      document.getElementById('projShort').value='';
+      document.getElementById('projImage').value='';
+      document.getElementById('projLive').value='';
+      document.getElementById('projRepo').value='';
+      renderProjects();
+    });
+    function renderProjects(){
+      projectsList.innerHTML='';
+      projItems.forEach((p,i)=>{
+        const row=document.createElement('div');
+        row.className='p-3 bg-white border border-gray-200 rounded-lg flex justify-between items-start';
+        row.innerHTML=`<div><div class='font-semibold'>${p.t}</div><div class='text-sm text-gray-600 mt-1'>${p.s}</div>${p.img?`<div class='text-xs text-gray-500 mt-1'>Image: ${p.img.substring(0,40)}...</div>`:''}</div><button type='button' class='text-red-600' onclick='removeProject(${i})'>Remove</button>`;
+        projectsList.appendChild(row);
+      });
+      projectsHidden.value = projItems.map(p=>`${p.t} | ${p.s} | ${p.img} | ${p.live} | ${p.repo}`).join('\n');
+    }
+    window.removeProject = function(i){ projItems.splice(i,1); renderProjects(); }
+
+    const certItems = [];
+    const certList = document.getElementById('certList');
+    const certHidden = document.getElementById('certHidden');
+    const addCertBtn = document.getElementById('addCertBtn');
+    if (addCertBtn) addCertBtn.addEventListener('click', ()=>{
+      const n=document.getElementById('certName').value.trim();
+      const iss=document.getElementById('certIssuer').value.trim();
+      const y=document.getElementById('certYear').value.trim();
+      if(!n||!iss||!y) return alert('Fill all certification fields.');
+      certItems.push({n,iss,y});
+      document.getElementById('certName').value='';
+      document.getElementById('certIssuer').value='';
+      document.getElementById('certYear').value='';
+      renderCerts();
+    });
+    function renderCerts(){
+      certList.innerHTML='';
+      certItems.forEach((c,i)=>{
+        const row=document.createElement('div');
+        row.className='p-3 bg-white border border-gray-200 rounded-lg flex justify-between items-start';
+        row.innerHTML=`<div><div class='font-semibold'>${c.n}</div><div class='text-sm text-gray-600'>${c.iss} • ${c.y}</div></div><button type='button' class='text-red-600' onclick='removeCert(${i})'>Remove</button>`;
+        certList.appendChild(row);
+      });
+      certHidden.value = certItems.map(c=>`${c.n} | ${c.iss} | ${c.y}`).join('\n');
+    }
+    window.removeCert = function(i){ certItems.splice(i,1); renderCerts(); }
+
+    // Prefill form with existing data
+    const initialSkills = '{{ form.initial.skills|default:""|escapejs }}';
+    const initialExp = `{{ form.initial.experience|default:""|escapejs }}`;
+    const initialEdu = `{{ form.initial.education|default:""|escapejs }}`;
+    const initialProj = `{{ form.initial.projects|default:""|escapejs }}`;
+    const initialCert = `{{ form.initial.certifications|default:""|escapejs }}`;
+    
+    // Prefill skills
+    if (initialSkills) {
+        initialSkills.split(',').forEach(s => {
+            const skill = s.trim();
+            if (skill) skills.push(skill);
+        });
+        renderSkills();
+    }
+    
+    // Prefill experience
+    if (initialExp) {
+        initialExp.split('\n').forEach(line => {
+            if (!line.trim()) return;
+            const parts = line.split('|').map(p => p.trim());
+            if (parts.length >= 4) {
+                expItems.push({c: parts[0], r: parts[1], d: parts[2], desc: parts[3]});
+            }
+        });
+        renderExp();
+    }
+    
+    // Prefill education
+    if (initialEdu) {
+        initialEdu.split('\n').forEach(line => {
+            if (!line.trim()) return;
+            const parts = line.split('|').map(p => p.trim());
+            if (parts.length >= 3) {
+                eduItems.push({inst: parts[0], deg: parts[1], yr: parts[2], gpa: parts[3] || ''});
+            }
+        });
+        renderEdu();
+    }
+    
+    // Prefill projects
+    if (initialProj) {
+        initialProj.split('\n').forEach(line => {
+            if (!line.trim()) return;
+            const parts = line.split('|').map(p => p.trim());
+            if (parts.length >= 5) {
+                projItems.push({t: parts[0], s: parts[1], img: parts[2]||'', live: parts[3]||'#', repo: parts[4]||'#'});
+            }
+        });
+        renderProjects();
+    }
+    
+    // Prefill certifications
+    if (initialCert) {
+        initialCert.split('\n').forEach(line => {
+            if (!line.trim()) return;
+            const parts = line.split('|').map(p => p.trim());
+            if (parts.length >= 3) {
+                certItems.push({n: parts[0], iss: parts[1], y: parts[2]});
+            }
+        });
+        renderCerts();
+    }
+
+    form.addEventListener('submit', function(){
+      skillsHidden.value = skills.join(', ');
+    });
+});
+</script>
+{% endblock %}
+

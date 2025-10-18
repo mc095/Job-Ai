@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800">{{ exam.job_role }} - Assessment</h2>
+                    <div class="text-sm text-gray-600">
+                        Question {{ question_num }} of {{ total_questions }}
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                         style="width: {{ progress }}%"></div>
+                </div>
+                
+                <div class="mt-2 text-sm text-gray-600">
+                    Progress: {{ question_num }} of {{ total_questions }} questions
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-white rounded-lg shadow-sm p-8 mb-6">
+                <h3 class="text-xl font-semibold mb-6 text-gray-800">
+                    {{ question.text }}
+                </h3>
+                
+                <form method="post" class="space-y-4" id="examForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="answer">
+                    
+                    <div class="space-y-3">
+                        <label class="flex items-start p-4 rounded-lg border-2 cursor-pointer transition-colors
+                                      {% if show_feedback and selected_option == 'A' %}
+                                          {% if is_correct %}border-green-500 bg-green-50{% else %}border-red-500 bg-red-50{% endif %}
+                                      {% elif show_feedback and question.correct_option == 'A' %}
+                                          border-green-500 bg-green-50
+                                      {% else %}
+                                          hover:border-blue-300 border-gray-200
+                                      {% endif %}">
+                            <input type="radio" name="answer" value="A" 
+                                   {% if selected_option == 'A' %}checked{% endif %}
+                                   {% if show_feedback %}disabled{% endif %}
+                                   class="mt-1 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                            <span class="ml-4">
+                                <span class="font-medium text-gray-700">A.</span> 
+                                <span class="text-gray-800">{{ question.option_a }}</span>
+                                {% if show_feedback and question.correct_option == 'A' %}
+                                    <span class="ml-2 text-green-600 font-semibold">✓ Correct Answer</span>
+                                {% elif show_feedback and selected_option == 'A' and not is_correct %}
+                                    <span class="ml-2 text-red-600 font-semibold">✗ Your Answer</span>
+                                {% endif %}
+                            </span>
+                        </label>
+                        
+                        <label class="flex items-start p-4 rounded-lg border-2 cursor-pointer transition-colors
+                                      {% if show_feedback and selected_option == 'B' %}
+                                          {% if is_correct %}border-green-500 bg-green-50{% else %}border-red-500 bg-red-50{% endif %}
+                                      {% elif show_feedback and question.correct_option == 'B' %}
+                                          border-green-500 bg-green-50
+                                      {% else %}
+                                          hover:border-blue-300 border-gray-200
+                                      {% endif %}">
+                            <input type="radio" name="answer" value="B" 
+                                   {% if selected_option == 'B' %}checked{% endif %}
+                                   {% if show_feedback %}disabled{% endif %}
+                                   class="mt-1 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                            <span class="ml-4">
+                                <span class="font-medium text-gray-700">B.</span> 
+                                <span class="text-gray-800">{{ question.option_b }}</span>
+                                {% if show_feedback and question.correct_option == 'B' %}
+                                    <span class="ml-2 text-green-600 font-semibold">✓ Correct Answer</span>
+                                {% elif show_feedback and selected_option == 'B' and not is_correct %}
+                                    <span class="ml-2 text-red-600 font-semibold">✗ Your Answer</span>
+                                {% endif %}
+                            </span>
+                        </label>
+                        
+                        <label class="flex items-start p-4 rounded-lg border-2 cursor-pointer transition-colors
+                                      {% if show_feedback and selected_option == 'C' %}
+                                          {% if is_correct %}border-green-500 bg-green-50{% else %}border-red-500 bg-red-50{% endif %}
+                                      {% elif show_feedback and question.correct_option == 'C' %}
+                                          border-green-500 bg-green-50
+                                      {% else %}
+                                          hover:border-blue-300 border-gray-200
+                                      {% endif %}">
+                            <input type="radio" name="answer" value="C" 
+                                   {% if selected_option == 'C' %}checked{% endif %}
+                                   {% if show_feedback %}disabled{% endif %}
+                                   class="mt-1 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                            <span class="ml-4">
+                                <span class="font-medium text-gray-700">C.</span> 
+                                <span class="text-gray-800">{{ question.option_c }}</span>
+                                {% if show_feedback and question.correct_option == 'C' %}
+                                    <span class="ml-2 text-green-600 font-semibold">✓ Correct Answer</span>
+                                {% elif show_feedback and selected_option == 'C' and not is_correct %}
+                                    <span class="ml-2 text-red-600 font-semibold">✗ Your Answer</span>
+                                {% endif %}
+                            </span>
+                        </label>
+                        
+                        <label class="flex items-start p-4 rounded-lg border-2 cursor-pointer transition-colors
+                                      {% if show_feedback and selected_option == 'D' %}
+                                          {% if is_correct %}border-green-500 bg-green-50{% else %}border-red-500 bg-red-50{% endif %}
+                                      {% elif show_feedback and question.correct_option == 'D' %}
+                                          border-green-500 bg-green-50
+                                      {% else %}
+                                          hover:border-blue-300 border-gray-200
+                                      {% endif %}">
+                            <input type="radio" name="answer" value="D" 
+                                   {% if selected_option == 'D' %}checked{% endif %}
+                                   {% if show_feedback %}disabled{% endif %}
+                                   class="mt-1 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                            <span class="ml-4">
+                                <span class="font-medium text-gray-700">D.</span> 
+                                <span class="text-gray-800">{{ question.option_d }}</span>
+                                {% if show_feedback and question.correct_option == 'D' %}
+                                    <span class="ml-2 text-green-600 font-semibold">✓ Correct Answer</span>
+                                {% elif show_feedback and selected_option == 'D' and not is_correct %}
+                                    <span class="ml-2 text-red-600 font-semibold">✗ Your Answer</span>
+                                {% endif %}
+                            </span>
+                        </label>
+                    </div>
+                </form>
+                
+                <!-- Feedback Section -->
+                {% if show_feedback %}
+                    <div class="mt-6 p-4 rounded-lg {% if is_correct %}bg-green-50 border border-green-200{% else %}bg-red-50 border border-red-200{% endif %}">
+                        <div class="flex items-center mb-2">
+                            {% if is_correct %}
+                                <span class="text-green-600 font-semibold text-lg">✓ Correct!</span>
+                            {% else %}
+                                <span class="text-red-600 font-semibold text-lg">✗ Incorrect</span>
+                            {% endif %}
+                        </div>
+                        <p class="text-sm text-gray-700">
+                            <strong>Your Answer:</strong> {{ selected_option }} | 
+                            <strong>Correct Answer:</strong> {{ question.correct_option }}
+                        </p>
+                        {% if not is_correct %}
+                            <p class="text-sm text-gray-600 mt-2">
+                                <strong>Explanation:</strong> {{ question.explanation|default:"The correct answer provides the most accurate information for this question." }}
+                            </p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Navigation -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        {% if question_num > 1 %}
+                            <a href="{% url 'exam_test' exam_id=exam_id question_num=question_num|add:-1 %}" 
+                               class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg 
+                                      focus:outline-none focus:shadow-outline transition-colors">
+                                ← Previous
+                            </a>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex space-x-3">
+                        {% if not show_feedback %}
+                            <button type="submit" form="examForm"
+                                    class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg 
+                                           focus:outline-none focus:shadow-outline transition-colors">
+                                Check Answer
+                            </button>
+                        {% else %}
+                            {% if question_num < total_questions %}
+                                <form method="post" class="inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="next">
+                                    <button type="submit"
+                                            class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg 
+                                                   focus:outline-none focus:shadow-outline transition-colors">
+                                        Next →
+                                    </button>
+                                </form>
+                            {% else %}
+                                <form method="post" class="inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="next">
+                                    <button type="submit"
+                                            class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-6 rounded-lg 
+                                                   focus:outline-none focus:shadow-outline transition-colors">
+                                        Finish Exam
+                                    </button>
+                                </form>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Handle option selection
+document.querySelectorAll('input[name="answer"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        // Add visual feedback for selected option
+        document.querySelectorAll('label').forEach(label => {
+            label.classList.remove('border-blue-500', 'bg-blue-50');
+            label.classList.add('border-gray-200');
+        });
+        
+        this.closest('label').classList.remove('border-gray-200');
+        this.closest('label').classList.add('border-blue-500', 'bg-blue-50');
+        
+        // Enable the Check Answer button
+        const checkButton = document.querySelector('button[type="submit"]');
+        if (checkButton) {
+            checkButton.disabled = false;
+            checkButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    });
+});
+
+// Disable Check Answer button initially if no option is selected
+document.addEventListener('DOMContentLoaded', function() {
+    const checkButton = document.querySelector('button[type="submit"]');
+    const selectedOption = document.querySelector('input[name="answer"]:checked');
+    
+    if (checkButton && !selectedOption) {
+        checkButton.disabled = true;
+        checkButton.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,75 @@
+====================================
+COPY-PASTE THESE COMMANDS ONE BY ONE
+====================================
+
+Step 1: Activate virtual environment
+-------------------------------------
+venv\Scripts\activate
+
+
+Step 2: Update pip
+-------------------------------------
+python -m pip install --upgrade pip
+
+
+Step 3: Remove old packages
+-------------------------------------
+pip uninstall -y moonshine moonshine-speech tensorflow keras useful-moonshine
+
+
+Step 4: Install Kokoro TTS
+-------------------------------------
+pip install kokoro>=0.9.4 soundfile numpy
+
+
+Step 5: Install PyTorch
+-------------------------------------
+pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+
+Step 6: Install Moonshine from GitHub (CRITICAL!)
+-------------------------------------
+pip install git+https://github.com/moonshine-ai/moonshine.git#subdirectory=moonshine-onnx
+
+
+Step 7: Install espeak-ng (Manual!)
+-------------------------------------
+1. Go to: https://github.com/espeak-ng/espeak-ng/releases
+2. Download: espeak-ng-X64.msi
+3. Run the installer
+4. Restart your terminal
+
+
+Step 8: Test installation
+-------------------------------------
+python test_kokoro.py
+
+
+Step 9: Start Django
+-------------------------------------
+python manage.py runserver
+
+
+Step 10: Open in browser
+-------------------------------------
+http://127.0.0.1:8000/interview/voice/
+
+
+====================================
+OR JUST RUN THIS ONE COMMAND:
+====================================
+
+setup_voice_interview.bat
+
+
+====================================
+WHY THE ERROR HAPPENED:
+====================================
+
+useful-moonshine-onnx is NOT on PyPI!
+It's in a GitHub subdirectory.
+
+You MUST install it with:
+pip install git+https://github.com/moonshine-ai/moonshine.git#subdirectory=moonshine-onnx
+
+====================================

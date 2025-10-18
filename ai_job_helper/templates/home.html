@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="min-h-screen py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Welcome Header -->
+        <div class="text-center mb-12 animate-fade-in">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl shadow-xl mb-6">
+                <i class="fas fa-robot text-white text-3xl"></i>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-900 via-primary-600 to-secondary-600 bg-clip-text text-transparent mb-4">
+                Welcome back, {{ user.username }}!
+            </h1>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                Ready to advance your career? Choose from our AI-powered tools to build your professional profile.
+            </p>
+        </div>
+
+        <!-- User Stats Section -->
+        <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8 mb-12">
+            <div class="flex items-center space-x-3 mb-6">
+                <div class="w-10 h-10 bg-gradient-to-br from-accent-500 to-green-500 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-chart-line text-white"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800">Your Performance Dashboard</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gradient-to-br from-primary-50 to-primary-100 rounded-2xl p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-primary-800 mb-2">Latest Exam Score</h3>
+                            <p class="text-3xl font-bold text-primary-600">{{ stats.exam_score|default:"N/A" }}</p>
+                        </div>
+                        <div class="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-graduation-cap text-white text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-secondary-50 to-secondary-100 rounded-2xl p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-secondary-800 mb-2">Latest ATS Score</h3>
+                            <p class="text-3xl font-bold text-secondary-600">{{ stats.ats_score|default:"N/A" }}</p>
+                        </div>
+                        <div class="w-12 h-12 bg-secondary-500 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-file-alt text-white text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Services Section -->
+        <div class="mb-12">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">AI-Powered Career Tools</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Choose from our comprehensive suite of professional development tools</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {% for service in services %}
+                <a href="{% url service.url %}" 
+                   class="group bg-white/80 backdrop-blur-md rounded-3xl shadow-xl border border-white/20 overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="p-8 text-center">
+                        <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                            <span class="text-3xl">{{ service.icon }}</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-3 group-hover:text-primary-600 transition-colors">
+                            {{ service.name }}
+                        </h3>
+                        <p class="text-gray-600 text-sm mb-4">
+                            {% if service.name == "Resume Builder" %}
+                                Create professional resumes with AI assistance and ATS optimization
+                            {% elif service.name == "Exam Prep" %}
+                                Practice with mock exams and get detailed performance analytics
+                            {% elif service.name == "Mock Interview" %}
+                                Prepare for interviews with AI-powered mock sessions
+                            {% elif service.name == "Portfolio" %}
+                                Build stunning portfolios with professional templates
+                            {% else %}
+                                Professional development tool
+                            {% endif %}
+                        </p>
+                        <div class="inline-flex items-center text-primary-600 font-medium group-hover:text-primary-700">
+                            <span>Get Started</span>
+                            <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-gradient-to-r from-primary-500 to-secondary-500 rounded-3xl p-12 text-white shadow-2xl">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold mb-4">Ready to Get Started?</h2>
+                <p class="text-xl text-white/90 max-w-2xl mx-auto">
+                    Choose your first tool and begin building your professional profile today
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <a href="{% url 'resume_home' %}" 
+                   class="bg-white/20 backdrop-blur-sm rounded-2xl p-6 text-center hover:bg-white/30 transition-all duration-200 transform hover:-translate-y-1">
+                    <i class="fas fa-file-alt text-3xl mb-3"></i>
+                    <h3 class="font-semibold mb-2">Build Resume</h3>
+                    <p class="text-sm text-white/80">Start with resume</p>
+                </a>
+                
+                <a href="{% url 'exam_home' %}" 
+                   class="bg-white/20 backdrop-blur-sm rounded-2xl p-6 text-center hover:bg-white/30 transition-all duration-200 transform hover:-translate-y-1">
+                    <i class="fas fa-graduation-cap text-3xl mb-3"></i>
+                    <h3 class="font-semibold mb-2">Take Exam</h3>
+                    <p class="text-sm text-white/80">Practice skills</p>
+                </a>
+                
+                <a href="{% url 'interview_home' %}" 
+                   class="bg-white/20 backdrop-blur-sm rounded-2xl p-6 text-center hover:bg-white/30 transition-all duration-200 transform hover:-translate-y-1">
+                    <i class="fas fa-microphone text-3xl mb-3"></i>
+                    <h3 class="font-semibold mb-2">Mock Interview</h3>
+                    <p class="text-sm text-white/80">Practice speaking</p>
+                </a>
+                
+                <a href="{% url 'portfolio_home' %}" 
+                   class="bg-white/20 backdrop-blur-sm rounded-2xl p-6 text-center hover:bg-white/30 transition-all duration-200 transform hover:-translate-y-1">
+                    <i class="fas fa-briefcase text-3xl mb-3"></i>
+                    <h3 class="font-semibold mb-2">Create Portfolio</h3>
+                    <p class="text-sm text-white/80">Showcase work</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Animation Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add staggered animation to service cards
+    const serviceCards = document.querySelectorAll('a[href*="service"]');
+    serviceCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.classList.add('animate-slide-up');
+    });
+    
+    // Add hover effects to quick action cards
+    const quickActionCards = document.querySelectorAll('a[href*="home"]');
+    quickActionCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-4px) scale(1.02)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+});
+</script>
+{% endblock %}

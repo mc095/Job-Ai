@@ -1,0 +1,702 @@
+{% extends "base.html" %}
+{% load ats_filters %}
+{% block content %}
+<div class="min-h-screen py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header Section -->
+        <div class="text-center mb-12 animate-fade-in">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl shadow-xl mb-6">
+                <i class="fas fa-robot text-white text-3xl"></i>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-900 via-primary-600 to-secondary-600 bg-clip-text text-transparent mb-4">
+                ATS Optimization
+            </h1>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                Optimize your resume for Applicant Tracking Systems and get detailed scoring with AI-powered suggestions
+            </p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+            <!-- ATS Form -->
+            <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8">
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-10 h-10 bg-gradient-to-br from-accent-500 to-green-500 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-edit text-white"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800">Run ATS Analysis</h2>
+                </div>
+
+                <form method="post" class="space-y-6" id="atsForm">
+                    {% csrf_token %}
+                    
+                    <div class="space-y-2">
+                        <label for="{{ form.job_description.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+                            <i class="fas fa-file-alt mr-2 text-primary-500"></i>Job Description
+                        </label>
+                        <textarea name="job_description" 
+                                  id="{{ form.job_description.id_for_label }}"
+                                  rows="6"
+                                  required
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none"
+                                  placeholder="Paste the job description here to analyze your resume against it..."></textarea>
+                        <p class="text-sm text-gray-500">The ATS will analyze your resume against this job description</p>
+                    </div>
+
+                    <div class="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl">
+                        <input type="checkbox" 
+                               name="rewrite_resume" 
+                               id="{{ form.rewrite_resume.id_for_label }}"
+                               class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+                        <label for="{{ form.rewrite_resume.id_for_label }}" class="text-sm font-medium text-gray-700">
+                            Also generate an optimized resume rewrite
+                        </label>
+                    </div>
+
+                    <button type="submit" 
+                            class="w-full bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-xl">
+                        <i class="fas fa-play mr-2"></i>
+                        Run ATS Analysis
+                    </button>
+                </form>
+            </div>
+
+            <!-- Features & Benefits -->
+            <div class="space-y-8">
+                <!-- Features List -->
+                <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-star mr-3 text-accent-500"></i>
+                        What You'll Get
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-6 h-6 bg-accent-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fas fa-check text-accent-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">ATS Score</h4>
+                                <p class="text-sm text-gray-600">Get a detailed score out of 100 for ATS compatibility</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-6 h-6 bg-accent-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fas fa-check text-accent-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Missing Keywords</h4>
+                                <p class="text-sm text-gray-600">Identify keywords from the job description that are missing</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-6 h-6 bg-accent-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fas fa-check text-accent-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">AI Suggestions</h4>
+                                <p class="text-sm text-gray-600">Get specific recommendations to improve your resume</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-6 h-6 bg-accent-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fas fa-check text-accent-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Optimized Resume</h4>
+                                <p class="text-sm text-gray-600">Receive an AI-rewritten version of your resume</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gradient-to-br from-primary-50 to-primary-100 rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-bold text-primary-600 mb-2">90%</div>
+                        <div class="text-sm text-primary-800">Average Improvement</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-secondary-50 to-secondary-100 rounded-2xl p-6 text-center">
+                        <div class="text-3xl font-bold text-secondary-600 mb-2">2k+</div>
+                        <div class="text-sm text-secondary-800">Resumes Optimized</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        {% if error %}
+        <div class="mt-8 bg-red-50 border border-red-200 rounded-2xl p-6">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+                <p class="text-red-700 font-medium">{{ error }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Results Section -->
+        {% if result %}
+        <div class="mt-16 space-y-8">
+            <!-- REAL ATS Analysis Header -->
+            <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-3xl p-8 border border-green-200">
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-500 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-check-circle text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">✅ REAL ATS Analysis</h2>
+                        <p class="text-gray-600">Genuine ATS scoring based on actual compatibility factors</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed ATS Scores -->
+            <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8">
+                <div class="flex items-center space-x-3 mb-8">
+                    <div class="w-10 h-10 bg-gradient-to-br from-accent-500 to-green-500 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-chart-line text-white"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800">Detailed ATS Scores</h2>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Overall Score -->
+                    <div class="bg-gradient-to-br from-primary-50 to-primary-100 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-primary-800">Overall Score</h3>
+                            <i class="fas fa-trophy text-primary-500 text-xl"></i>
+                        </div>
+                        <div class="text-4xl font-bold text-primary-600 mb-2">{{ result.final_score }}/100</div>
+                        <div class="w-full bg-primary-200 rounded-full h-2">
+                            <div class="bg-primary-500 h-2 rounded-full" data-progress="{{ result.final_score }}"></div>
+                        </div>
+                        <p class="text-sm text-primary-700 mt-2">Weighted ATS compatibility</p>
+                    </div>
+                    
+                    <!-- Keyword Score -->
+                    {% if real_analysis %}
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-blue-800">Keywords</h3>
+                            <i class="fas fa-key text-blue-500 text-xl"></i>
+                        </div>
+                        <div class="text-4xl font-bold text-blue-600 mb-2">{{ real_analysis.keyword_score }}/100</div>
+                        <div class="w-full bg-blue-200 rounded-full h-2">
+                            <div class="bg-blue-500 h-2 rounded-full" data-progress="{{ real_analysis.keyword_score }}"></div>
+                        </div>
+                        <p class="text-sm text-blue-700 mt-2">Technical & soft skills match</p>
+                    </div>
+                    
+                    <!-- Section Score -->
+                    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-green-800">Sections</h3>
+                            <i class="fas fa-list-alt text-green-500 text-xl"></i>
+                        </div>
+                        <div class="text-4xl font-bold text-green-600 mb-2">{{ real_analysis.section_score }}/100</div>
+                        <div class="w-full bg-green-200 rounded-full h-2">
+                            <div class="bg-green-500 h-2 rounded-full" data-progress="{{ real_analysis.section_score }}"></div>
+                        </div>
+                        <p class="text-sm text-green-700 mt-2">Complete resume sections</p>
+                    </div>
+                    
+                    <!-- Format Score -->
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-purple-800">Format</h3>
+                            <i class="fas fa-file-alt text-purple-500 text-xl"></i>
+                        </div>
+                        <div class="text-4xl font-bold text-purple-600 mb-2">{{ real_analysis.format_score }}/100</div>
+                        <div class="w-full bg-purple-200 rounded-full h-2">
+                            <div class="bg-purple-500 h-2 rounded-full" data-progress="{{ real_analysis.format_score }}"></div>
+                        </div>
+                        <p class="text-sm text-purple-700 mt-2">ATS-friendly formatting</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Missing Critical Keywords -->
+            {% if result.missing_keywords %}
+            <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8">
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-exclamation-triangle text-white"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800">Missing Critical Keywords</h2>
+                </div>
+                <div class="bg-orange-50 rounded-xl p-6">
+                    <p class="text-sm text-orange-800 mb-4">These keywords from the job description are missing from your resume:</p>
+                    <div class="flex flex-wrap gap-2">
+                        {% for keyword in result.missing_keywords|split:"," %}
+                        <span class="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">{{ keyword }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Detailed Suggestions -->
+            {% if result.suggestions %}
+            <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8">
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-10 h-10 bg-gradient-to-br from-accent-500 to-green-500 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-lightbulb text-white"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800">AI-Powered Suggestions</h2>
+                </div>
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                    <div id="atsSuggestionsContent" class="prose prose-sm max-w-none text-gray-700 leading-relaxed"></div>
+                </div>
+            </div>
+            <script>
+                (function() {
+                    const rawText = `{{ result.suggestions|escapejs }}`;
+                    const container = document.getElementById('atsSuggestionsContent');
+                    if (container) {
+                        if (rawText && rawText.trim().length > 0) {
+                            container.innerHTML = parseMarkdown(rawText);
+                        } else {
+                            container.innerHTML = '<p class="text-gray-500 italic">No suggestions available.</p>';
+                        }
+                    }
+                })();
+            </script>
+            {% endif %}
+
+            <!-- Comprehensive Analysis Breakdown -->
+            {% if real_analysis %}
+            <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-3xl p-8 border border-indigo-200">
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-microscope text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Comprehensive Analysis Breakdown</h2>
+                        <p class="text-gray-600">Detailed insights into your resume's ATS performance</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Keyword Analysis -->
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-key text-blue-500 mr-2"></i>
+                            Keyword Analysis
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Match Score</span>
+                                <span class="font-semibold text-blue-600">{{ real_analysis.keyword_score }}%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-500 h-2 rounded-full" data-progress="{{ real_analysis.keyword_score }}"></div>
+                            </div>
+                            <p class="text-xs text-gray-500">
+                                {% if real_analysis.keyword_score >= 80 %}
+                                Excellent keyword matching! Your resume contains most required terms.
+                                {% elif real_analysis.keyword_score >= 60 %}
+                                Good keyword coverage. Consider adding more industry-specific terms.
+                                {% else %}
+                                Low keyword match. Add more relevant technical and soft skills.
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Section Analysis -->
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-list-alt text-green-500 mr-2"></i>
+                            Section Completeness
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Completeness Score</span>
+                                <span class="font-semibold text-green-600">{{ real_analysis.section_score }}%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-500 h-2 rounded-full" data-progress="{{ real_analysis.section_score }}"></div>
+                            </div>
+                            <p class="text-xs text-gray-500">
+                                {% if real_analysis.section_score >= 80 %}
+                                All essential sections present. Great structure!
+                                {% elif real_analysis.section_score >= 60 %}
+                                Most sections present. Consider adding missing ones.
+                                {% else %}
+                                Missing key sections. Add standard resume sections.
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Format Analysis -->
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-file-alt text-purple-500 mr-2"></i>
+                            Format Compatibility
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Format Score</span>
+                                <span class="font-semibold text-purple-600">{{ real_analysis.format_score }}%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-purple-500 h-2 rounded-full" data-progress="{{ real_analysis.format_score }}"></div>
+                            </div>
+                            <p class="text-xs text-gray-500">
+                                {% if real_analysis.format_score >= 80 %}
+                                Excellent ATS-friendly formatting!
+                                {% elif real_analysis.format_score >= 60 %}
+                                Good format. Minor improvements needed.
+                                {% else %}
+                                Format needs optimization for ATS parsing.
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Experience Analysis -->
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-briefcase text-orange-500 mr-2"></i>
+                            Experience Relevance
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Relevance Score</span>
+                                <span class="font-semibold text-orange-600">{{ real_analysis.experience_score }}%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-orange-500 h-2 rounded-full" data-progress="{{ real_analysis.experience_score }}"></div>
+                            </div>
+                            <p class="text-xs text-gray-500">
+                                {% if real_analysis.experience_score >= 80 %}
+                                Highly relevant experience for this role!
+                                {% elif real_analysis.experience_score >= 60 %}
+                                Good experience match. Highlight more relevant skills.
+                                {% else %}
+                                Experience needs better alignment with job requirements.
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ATS Strategy Guide -->
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-3xl p-8 border border-blue-200">
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-graduation-cap text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">ATS Optimization Strategy Guide</h2>
+                        <p class="text-gray-600">Learn how to maximize your chances of passing ATS screening</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">🎯 Keyword Strategy</h3>
+                        <ul class="space-y-2 text-sm text-gray-700">
+                            <li class="flex items-start space-x-2">
+                                <span class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
+                                <span>Include exact keywords from the job description</span>
+                            </li>
+                            <li class="flex items-start space-x-2">
+                                <span class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
+                                <span>Use both technical skills and soft skills mentioned</span>
+                            </li>
+                            <li class="flex items-start space-x-2">
+                                <span class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
+                                <span>Place keywords naturally in experience descriptions</span>
+                            </li>
+                            <li class="flex items-start space-x-2">
+                                <span class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
+                                <span>Aim for 70%+ keyword match for best results</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">📄 Format Best Practices</h3>
+                        <ul class="space-y-2 text-sm text-gray-700">
+                            <li class="flex items-start space-x-2">
+                                <span class="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></span>
+                                <span>Use standard section headers (Experience, Education, Skills)</span>
+                            </li>
+                            <li class="flex items-start space-x-2">
+                                <span class="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></span>
+                                <span>Include quantified achievements with numbers</span>
+                            </li>
+                            <li class="flex items-start space-x-2">
+                                <span class="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></span>
+                                <span>Start bullet points with strong action verbs</span>
+                            </li>
+                            <li class="flex items-start space-x-2">
+                                <span class="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></span>
+                                <span>Use professional email and contact information</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-8 p-6 bg-white rounded-xl border border-blue-200">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">💡 Pro Tips for ATS Success</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-700">
+                        <div class="p-4 bg-blue-50 rounded-lg">
+                            <h4 class="font-semibold text-blue-800 mb-2">Keyword Density</h4>
+                            <p>Include important keywords 2-3 times throughout your resume for optimal ATS recognition.</p>
+                        </div>
+                        <div class="p-4 bg-green-50 rounded-lg">
+                            <h4 class="font-semibold text-green-800 mb-2">Section Completeness</h4>
+                            <p>Ensure all standard sections are present. Missing sections can significantly lower your ATS score.</p>
+                        </div>
+                        <div class="p-4 bg-purple-50 rounded-lg">
+                            <h4 class="font-semibold text-purple-800 mb-2">Quantified Results</h4>
+                            <p>Use specific numbers, percentages, and metrics to demonstrate your impact and achievements.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section Analysis -->
+            {% if real_analysis and real_analysis.sections_analysis %}
+            <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8">
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-clipboard-list text-white"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800">Resume Section Analysis</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {% for section, present in real_analysis.sections_analysis.items %}
+                    <div class="p-4 rounded-lg {% if present %}bg-green-50 border border-green-200{% else %}bg-red-50 border border-red-200{% endif %}">
+                        <div class="flex items-center space-x-2">
+                            {% if present %}
+                            <i class="fas fa-check-circle text-green-500"></i>
+                            <span class="font-semibold text-green-800 capitalize">{{ section }}</span>
+                            {% else %}
+                            <i class="fas fa-times-circle text-red-500"></i>
+                            <span class="font-semibold text-red-800 capitalize">{{ section }}</span>
+                            {% endif %}
+                        </div>
+                        <p class="text-sm {% if present %}text-green-600{% else %}text-red-600{% endif %} mt-1">
+                            {% if present %}Present{% else %}Missing{% endif %}
+                        </p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Optimized Resume -->
+            {% if result.optimized_resume %}
+            <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8">
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-file-alt text-white"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800">Optimized Resume</h2>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-6">
+                    <pre class="text-sm text-gray-700 whitespace-pre-wrap font-mono">{{ result.optimized_resume }}</pre>
+                </div>
+                <div class="mt-4 flex space-x-4">
+                    <button onclick="copyToClipboard('{{ result.optimized_resume|escapejs }}')" 
+                            class="bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-4 py-2 rounded-xl font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200">
+                        <i class="fas fa-copy mr-2"></i>
+                        Copy Resume
+                    </button>
+                    <button onclick="downloadResume()" 
+                            class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-xl font-semibold hover:bg-gray-50 transform hover:-translate-y-0.5 transition-all duration-200">
+                        <i class="fas fa-download mr-2"></i>
+                        Download
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- History Section -->
+        {% if history %}
+        <div class="mt-16 bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 p-8">
+            <div class="flex items-center space-x-3 mb-6">
+                <div class="w-10 h-10 bg-gradient-to-br from-gray-500 to-gray-600 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-history text-white"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800">Recent ATS Runs</h2>
+            </div>
+            
+            <div class="space-y-4">
+                {% for h in history %}
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center">
+                            <span class="text-white font-bold">{{ h.final_score }}</span>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-800">{{ h.created_at|date:"M d, Y" }}</div>
+                            <div class="text-sm text-gray-500">{{ h.created_at|date:"H:i" }}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-bold text-gray-800">{{ h.final_score }}/100</div>
+                        <div class="text-sm text-gray-500">Final Score</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- How It Works -->
+        <div class="mt-16 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-3xl p-8">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">How It Works</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Simple steps to optimize your resume for ATS systems</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-white">1</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">Paste Job Description</h3>
+                    <p class="text-gray-600">Provide the job description you want to match</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-accent-500 to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-white">2</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">AI Analysis</h3>
+                    <p class="text-gray-600">Our AI analyzes your resume against ATS requirements</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-secondary-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-white">3</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">Get Results</h3>
+                    <p class="text-gray-600">Receive scores, suggestions, and optimized resume</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Puter.js is loaded globally in base.html -->
+
+<!-- Custom JavaScript -->
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Show success message
+        const button = event.target.closest('button');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check mr-2"></i>Copied!';
+        button.classList.add('bg-green-500');
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.classList.remove('bg-green-500');
+        }, 2000);
+    });
+}
+
+function downloadResume() {
+    const resumeText = `{{ result.optimized_resume|escapejs }}`;
+    const blob = new Blob([resumeText], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ats_optimized_resume.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('atsForm');
+    const textarea = document.getElementById('{{ form.job_description.id_for_label }}');
+    const resumeTextFromServer = `{{ resume_text|default:""|escapejs }}`;
+
+    form.addEventListener('submit', async function(ev) {
+        ev.preventDefault();
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalLabel = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Analyzing with AI...';
+        submitBtn.disabled = true;
+
+        try {
+            const jd = textarea.value?.trim();
+            const resumeText = resumeTextFromServer?.trim();
+
+            if (resumeText && jd) {
+                const prompt =
+`You are an expert ATS (Applicant Tracking System) evaluator. Analyze the resume against the job description and provide genuine, actionable feedback.
+
+Format your response EXACTLY like this:
+
+### ATS Score:
+<0-100 integer based on keyword match, format, and relevance>
+
+### Missing Keywords:
+<comma-separated list of important keywords from JD missing in resume, max 30>
+
+### Suggestions:
+**Critical Improvements:**
+- [specific actionable suggestion 1]
+- [specific actionable suggestion 2]
+- [specific actionable suggestion 3]
+
+**Keyword Optimization:**
+- [how to add missing keywords naturally]
+- [where to place key terms]
+
+**Format & Structure:**
+- [formatting improvements]
+- [section enhancements]
+
+**Experience & Skills:**
+- [how to better highlight relevant experience]
+- [skills to emphasize]
+
+Provide 8-12 total suggestions across these categories. Be specific and actionable.
+
+Candidate Resume:
+---
+${resumeText}
+---
+
+Job Description:
+---
+${jd}
+---`;
+
+                const response = await puter.ai.chat(prompt, { model: 'gpt-5-nano' });
+                let hidden = document.getElementById('puter_result');
+                if (!hidden) {
+                    hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'puter_result';
+                    hidden.id = 'puter_result';
+                    form.appendChild(hidden);
+                }
+                hidden.value = String(response || '');
+            }
+        } catch (e) {
+            console.warn('Puter.js ATS check failed:', e);
+        } finally {
+            submitBtn.innerHTML = originalLabel;
+            submitBtn.disabled = false;
+            form.submit();
+        }
+    });
+});
+</script>
+{% endblock %}

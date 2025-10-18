@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="bg-white rounded-lg shadow-sm p-8 mb-6 text-center">
+                <h1 class="text-3xl font-bold text-gray-800 mb-4">Exam Results</h1>
+                <h2 class="text-xl text-gray-600 mb-6">{{ exam.job_role }}</h2>
+                
+                <!-- Score Display -->
+                <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 text-white">
+                    <div class="text-4xl font-bold mb-2">{{ percentage }}%</div>
+                    <div class="text-lg">You scored {{ correct_count }} out of {{ total_questions }} questions</div>
+                </div>
+                
+                <!-- Performance Message -->
+                <div class="mt-6">
+                    {% if percentage >= 80 %}
+                        <div class="text-green-600 text-lg font-semibold">🎉 Excellent! Great job!</div>
+                    {% elif percentage >= 60 %}
+                        <div class="text-yellow-600 text-lg font-semibold">👍 Good work! Keep practicing!</div>
+                    {% else %}
+                        <div class="text-red-600 text-lg font-semibold">📚 Keep studying! You'll get there!</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Detailed Results -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-6">Question Review</h3>
+                
+                <div class="space-y-6">
+                    {% for result in question_results %}
+                        <div class="border rounded-lg p-6 {% if result.is_correct %}border-green-200 bg-green-50{% else %}border-red-200 bg-red-50{% endif %}">
+                            <div class="flex items-start justify-between mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800">
+                                    Question {{ forloop.counter }}
+                                </h4>
+                                <div class="flex items-center">
+                                    {% if result.is_correct %}
+                                        <span class="text-green-600 font-semibold">✓ Correct</span>
+                                    {% else %}
+                                        <span class="text-red-600 font-semibold">✗ Incorrect</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <p class="text-gray-700 mb-4">{{ result.question.text }}</p>
+                            
+                            <div class="space-y-2">
+                                {% for option_letter, option_text in result.question.get_options %}
+                                    <div class="flex items-center p-3 rounded-lg
+                                        {% if option_letter == result.correct_option %}
+                                            {% if result.is_correct %}
+                                                bg-green-100 border-2 border-green-300
+                                            {% else %}
+                                                bg-green-100 border-2 border-green-300
+                                            {% endif %}
+                                        {% elif option_letter == result.selected_option and not result.is_correct %}
+                                            bg-red-100 border-2 border-red-300
+                                        {% else %}
+                                            bg-gray-50 border border-gray-200
+                                        {% endif %}">
+                                        <span class="font-medium mr-3">{{ option_letter }}.</span>
+                                        <span class="flex-1">{{ option_text }}</span>
+                                        {% if option_letter == result.correct_option %}
+                                            <span class="text-green-600 font-semibold ml-2">✓ Correct Answer</span>
+                                        {% elif option_letter == result.selected_option and not result.is_correct %}
+                                            <span class="text-red-600 font-semibold ml-2">✗ Your Answer</span>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            
+                            {% if not result.is_correct %}
+                                <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <p class="text-sm text-blue-800">
+                                        <strong>Your Answer:</strong> {{ result.selected_option|default:"Not answered" }} | 
+                                        <strong>Correct Answer:</strong> {{ result.correct_option }}
+                                    </p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-8 text-center">
+                <a href="{% url 'exam_home' %}" 
+                   class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg 
+                          focus:outline-none focus:shadow-outline transition-colors mr-4">
+                    Take Another Exam
+                </a>
+                <a href="{% url 'home' %}" 
+                   class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-3 px-6 rounded-lg 
+                          focus:outline-none focus:shadow-outline transition-colors">
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
